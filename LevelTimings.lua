@@ -39,7 +39,14 @@ SlashCmdList['LevelTimings'] = function(msg)
         if prev ~= nil then
             delta = " (" .. SecondsToTime(t.played - prev.played) .. ")"
         end
-        print("[" .. date("%Y-%m-%d %H:%M:%S", t.timestamp) .. "] " .. level .. ": " .. SecondsToTime(t.played) .. delta)
+        local zone = ""
+        if t.zone ~= nil then
+            zone = " - "..t.zone
+            if t.subzone ~= nil then
+                zone = zone .. ' (' .. t.subzone .. ')'
+            end
+        end
+        print("[" .. date("%Y-%m-%d %H:%M:%S", t.timestamp) .. "] " .. level .. ": " .. SecondsToTime(t.played) .. delta .. zone)
     end
 end
 
@@ -163,12 +170,16 @@ function LevelTimings:handleTimePlayedLevelUp(totalTimePlayedSec, newLevels)
         return
     end
 
-    print('[LevelTimings] newLevels:', table.concat(newLevels, ", "), '; timestamp:', timestamp, '; totalTimePlayedSec:', totalTimePlayedSec, '; guid:', guid)
+    local zone = GetRealZoneText()
+    local subZone = GetSubZoneText()
+    print('[LevelTimings] newLevels:', table.concat(newLevels, ", "), '; timestamp:', timestamp, '; totalTimePlayedSec:', totalTimePlayedSec, '; guid:', guid, '; Zone:', GetZoneText(), '; realZone:', zone, '; subzone:', subZone)
     for _, newLevel in ipairs(newLevels) do
         print('recording new level', newLevel)
         LevelTimingsDB[guid]['timings'][newLevel] = {
             ['timestamp'] = timestamp,
-            ['played'] = totalTimePlayedSec
+            ['played'] = totalTimePlayedSec,
+            ['zone'] = zone,
+            ['subzone'] = subZone
         }
 
         local prevLevel = newLevel - 1
@@ -182,17 +193,4 @@ end
 
 function LevelTimings.playerGuid()
     return UnitGUID("player")
-end
-
-function LevelTimings.storeLevelTimings(self, playerGuid, isInitial, level, timestamp, totalTimePlayedSec)
-    local entry = {
-        ['level'] = level,
-        ['timestamp'] = timestamp,
-        ['played'] = totalTimePlayedSec
-    }
-    if isInitial then
-        entry.initial = true
-    end
-
-    LevelTimingsDB[playerGuid] = entry
 end
