@@ -95,10 +95,10 @@
 		</Anchors>
 		<Layers>
 			<Layer level="OVERLAY" textureSubLevel="-1">
-				<Texture name="$parentIcon" file="Interface\FriendsFrame\Battlenet-Portrait">
-					<Size x="60" y="60"/>
+				<Texture name="$parentIcon" file="Interface\Icons\Battlenet-Portrait">
+					<Size x="61" y="61"/>
 					<Anchors>
-						<Anchor point="TOPLEFT" x="-5" y="7"/>
+						<Anchor point="TOPLEFT" x="-6" y="10"/>
 					</Anchors>
 				</Texture>
 			</Layer>
@@ -112,6 +112,16 @@
 			</Layer>
 		</Layers>
 		<Frames>
+			<Frame name="LevelTimingsUI_CharactersDropDown" inherits="UIDropDownMenuTemplate" hidden="false">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="43" y="-27"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad function="LevelTimingsUI_CharactersDropDown_OnLoad"/>
+					<OnShow function="LevelTimingsUI_CharactersDropDown_OnShow"/>
+				</Scripts>
+			</Frame>
+
 			<Frame name="$parentInset" parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="4" y="-83" />

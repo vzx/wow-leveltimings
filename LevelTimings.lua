@@ -1,63 +1,18 @@
---[[
-TODO:
-- Detect name change upon loading
-- Custom duration calculation
-- Reset feature
-- UI to display level ups
-]]--
 
+local addonName = ...
 local LevelTimings = {}
-local addonName = 'LevelTimings'
 -- timePlayedRequested is initialized to true so that if another addon requests time played before us, we handle that
 local timePlayedRequested = true
 -- levelUps is an array because the player can get multiple level ups at one time and we want to record them all
 local levelUps = {}
 
-SLASH_LevelTimings1 = "/leveltimings"
-SlashCmdList['LevelTimings'] = function(msg)
-    -- Assumption: database has already been initialized at this point
-    local guid = UnitGUID("player")
-    if LevelTimingsDB == nil or LevelTimingsDB[guid] == nil then
-        print('[LevelTimings] LevelTimingsDB not initialized, LevelTimingsDB:', LevelTimingsDB, '; LevelTimingsDB[guid]:', LevelTimingsDB[guid])
-        return
-    end
-
-    local charEntry = LevelTimingsDB[guid]
-    local timings = charEntry.timings;
-    local levels = {}
-    local n = 1
-    for level, entry in pairs(timings) do
-        levels[n] = level
-        n = n + 1
-    end
-    table.sort(levels)
-    print('Level timings for ' .. charEntry.name .. '-' .. charEntry.realm)
-    for _, level in pairs(levels) do
-        local t = timings[level]
-        local prev = timings[level-1]
-        local delta = ""
-        if prev ~= nil then
-            delta = " (" .. SecondsToTime(t.played - prev.played) .. ")"
-        end
-        local zone = ""
-        if t.zone ~= nil then
-            zone = " - "..t.zone
-            if t.subzone ~= nil then
-                zone = zone .. ' (' .. t.subzone .. ')'
-            end
-        end
-        print("[" .. date("%Y-%m-%d %H:%M:%S", t.timestamp) .. "] " .. level .. ": " .. SecondsToTime(t.played) .. delta .. zone)
-    end
-end
-
-
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:RegisterEvent("PLAYER_LEVEL_UP")
-frame:RegisterEvent("TIME_PLAYED_MSG")
+local eventsFrame = CreateFrame("Frame")
+eventsFrame:RegisterEvent("ADDON_LOADED")
+eventsFrame:RegisterEvent("PLAYER_LEVEL_UP")
+eventsFrame:RegisterEvent("TIME_PLAYED_MSG")
 
 local function handleEvents(self, event, ...)
-    print('[LevelTimings] handle event', event, ...)
+    print("[LevelTimings] handle event", event, ...)
     if event == "ADDON_LOADED" then
         self:UnregisterEvent("ADDON_LOADED")
         LevelTimings:handleLoaded(...)
@@ -68,34 +23,40 @@ local function handleEvents(self, event, ...)
     end
 end
 
-frame:SetScript("OnEvent", handleEvents)
+eventsFrame:SetScript("OnEvent", handleEvents)
 
 
-function LevelTimings.handleLoaded(self, ...)
-    local addonName = ...
-    if addonName ~= addonName then
+function LevelTimings:handleLoaded(...)
+    local loadedAddonName = ...
+    print("[LevelTimings] handleLoaded", loadedAddonName)
+    if loadedAddonName ~= addonName then
         return
     end
 
     local guid = LevelTimings:playerGuid()
     if LevelTimingsDB ~= nil and LevelTimingsDB[guid] ~= nil then
         -- The DB has already been initialized for this character, nothing to do
-        print('[LevelTimings] LevelTimingsDB already initialized')
         timePlayedRequested = false
+        
+        -- Update base character data in case of some changes (eg. name or faction change)
+        LevelTimingsDB[guid].name = UnitFullName("player")
+        LevelTimingsDB[guid].realm = GetRealmName()
+        LevelTimingsDB[guid].class = select(2, UnitClass("player"))
+        LevelTimingsDB[guid].faction = UnitFactionGroup("player") 
+
         return
     end
 
-    -- if another addon requested time played first, timePlayedRequested should be false here
+    -- if another addon requested time played first, timePlayedRequested will be false here
     if timePlayedRequested then
         RequestTimePlayed()
-    else
-        print('[LevelTimings] NOT requesting time played, it was already handled')
     end
 end
 
 
-function LevelTimings.handleLevelUp(self, ...)
+function LevelTimings:handleLevelUp(...)
     local level = ...
+    print("[LevelTimings] handleLevelUp", level)
     timePlayedRequested = true
     local isFirstLevelUp = #levelUps == 0
     table.insert(levelUps, level)
@@ -104,13 +65,14 @@ function LevelTimings.handleLevelUp(self, ...)
         -- Assumption here is that all level up events are fired and handled before the time played message is handled
         RequestTimePlayed()
     else
-        print('[LevelTimings] Multiple level ups, this is number', #levelUps)
+        print("[LevelTimings] Multiple level ups, this is number", #levelUps)
     end
 end
 
 
-function LevelTimings.handleTimePlayed(self, ...)
+function LevelTimings:handleTimePlayed(...)
     local totalTimePlayedSec = ...
+    print("[LevelTimings] handleTimePlayed", totalTimePlayedSec)
     if not timePlayedRequested then
         return
     end
@@ -127,70 +89,78 @@ function LevelTimings.handleTimePlayed(self, ...)
     levelUps = {}
 end
 
-function LevelTimings.handleTimePlayedLoaded(self, totalTimePlayedSec)
+function LevelTimings:handleTimePlayedLoaded(totalTimePlayedSec)
+    print("[LevelTimings] handleTimePlayedLoaded", totalTimePlayedSec)
     if LevelTimingsDB == nil then
-        -- If the DB does not exist at all yet, initialize it to an empty table
-        print('[LevelTimings] LevelTimingsDB is nil, initializing')
+        -- If the DB does not exist at all yet, initialize it to an empty table first
+        print("[LevelTimings] LevelTimingsDB is nil, initializing")
         LevelTimingsDB = {}
     end
 
     local guid = LevelTimings:playerGuid()
     if LevelTimingsDB[guid] ~= nil then
-        print('[LevelTimings] LevelTimingsDB for', guid, 'already exists')
+        print("[LevelTimings] LevelTimingsDB for GUID", guid, "already exists")
         return
     end
 
-    print('[LevelTimings] LevelTimingsDB for', guid, 'is nil, initializing')
+    print("[LevelTimings] LevelTimingsDB for GUID", guid, "is nil, initializing")
 
-    -- No entry for the player at all, initialize entry
-    local name, realm = UnitFullName('player')
-    local currentLevel = UnitLevel('player')
+    -- No entry for the player, initialize entry
+    local name = UnitFullName("player")
+    -- GetRealmName() returns with spaces (eg. "Aerie Peak"), while UnitFullName() returns without (eg. "AeriePeak")
+    local realm = GetRealmName()
+    local currentLevel = UnitLevel("player")
+    local class = select(2, UnitClass("player"))
+    local faction = UnitFactionGroup("player")
     local timestamp = time()
-    print('[LevelTimings] name:', name, '; realm:', realm, '; currentLevel:', currentLevel, '; timestamp:', timestamp, '; totalTimePlayedSec:', totalTimePlayedSec)
+    print("[LevelTimings] name:", name, "; realm:", realm, "; currentLevel:", currentLevel, "; class:", class, "; faction:", faction, "; timestamp:", timestamp, "; totalTimePlayedSec:", totalTimePlayedSec)
     LevelTimingsDB[guid] = {
-        ['name'] = name,
-        ['realm'] = realm,
-        ['timings'] = {
+        name = name,
+        realm = realm,
+        class = class,
+        faction = faction,
+        timings = {
             [currentLevel] = {
-                ['initial'] = true,
-                ['timestamp'] = timestamp,
-                ['played'] = totalTimePlayedSec
+                timestamp = timestamp,
+                played = totalTimePlayedSec
             }
         }
     }
 end
 
 function LevelTimings:handleTimePlayedLevelUp(totalTimePlayedSec, newLevels)
-    -- Assumption: DB is fully initialized at this point
+    print("[LevelTimings] handleTimePlayedLevelUp", totalTimePlayedSec, table.concat(newLevels, ", "))
     local timestamp = time()
     local guid = LevelTimings:playerGuid()
-
-    if LevelTimingsDB == nil or LevelTimingsDB[guid] == nil then
-        print('[LevelTimings] DB not initialized; LevelTimingsDB:', LevelTimingsDB, '; LevelTimingsDB[guid]:', LevelTimingsDB[guid])
-        return
-    end
-
     local zone = GetRealZoneText()
     local subZone = GetSubZoneText()
-    print('[LevelTimings] newLevels:', table.concat(newLevels, ", "), '; timestamp:', timestamp, '; totalTimePlayedSec:', totalTimePlayedSec, '; guid:', guid, '; Zone:', GetZoneText(), '; realZone:', zone, '; subzone:', subZone)
+
+    print("[LevelTimings] newLevels:", table.concat(newLevels, ", "), "; timestamp:", timestamp, "; totalTimePlayedSec:", totalTimePlayedSec, "; guid:", guid, "; Zone:", GetZoneText(), "; realZone:", zone, "; subzone:", subZone)
     for _, newLevel in ipairs(newLevels) do
-        print('recording new level', newLevel)
-        LevelTimingsDB[guid]['timings'][newLevel] = {
-            ['timestamp'] = timestamp,
-            ['played'] = totalTimePlayedSec,
-            ['zone'] = zone,
-            ['subzone'] = subZone
+        print("recording new level", newLevel)
+        -- Record the data into the database
+        LevelTimingsDB[guid]["timings"][newLevel] = {
+            timestamp = timestamp,
+            played = totalTimePlayedSec,
+            zone = zone,
+            subzone = subZone
         }
 
+        -- Show a nice message to the player
         local prevLevel = newLevel - 1
-        local prevEntry = LevelTimingsDB[guid]['timings'][prevLevel]
+        local prevEntry = LevelTimingsDB[guid]["timings"][prevLevel]
         if prevEntry ~= nil then
             local secondsNeededToReachThislevel = totalTimePlayedSec - prevEntry.played
-            print('[LevelTimings] Took ' .. SecondsToTime(secondsNeededToReachThislevel) .. ' to reach level ' .. newLevel .. ' (' .. secondsNeededToReachThislevel .. ' seconds)')
+            print("[LevelTimings] Took " .. SecondsToTime(secondsNeededToReachThislevel) .. " to reach level " .. newLevel .. " (" .. secondsNeededToReachThislevel .. " seconds)")
+        end
+
+        -- Refresh the UI in case it is open at this time
+        if LevelTimingsUI_RefreshList then
+            LevelTimingsUI_RefreshList()
         end
     end
 end
 
-function LevelTimings.playerGuid()
+function LevelTimings:playerGuid()
     return UnitGUID("player")
 end

@@ -1,30 +1,45 @@
 
-local LevelTimingsUI = {rows = {}}
+local LevelTimingsUI = {
+	selectedGuid = UnitGUID("player"),
+	sortedRows = {}
+}
 
-SLASH_LevelTimingsUI1 = "/ltui"
-SlashCmdList['LevelTimingsUI'] = function(msg)
+SLASH_LevelTimings1 = "/leveltimings"
+SlashCmdList["LevelTimings"] = function(msg)
 	LevelTimingsUI:Show()
 end
 
 function LevelTimingsUI:Show()
-	ShowUIPanel(LevelTimingsUI_Frame)
+	LevelTimingsUI_Frame:Show()
 end
 
-function LevelTimingsUI:PopulateLevelRows()
-	LevelTimingsUI.rows = LevelTimingsUI:DetermineLevelRows()
+function LevelTimingsUI:SelectCharacter(guid)
+	LevelTimingsUI.selectedGuid = guid
+	LevelTimingsUI:SetSelectedCharacter(guid)
+	LevelTimingsUI:RefreshList()
 end
 
-function LevelTimingsUI:DetermineLevelRows()
-	local guid = UnitGUID('player')
+function LevelTimingsUI:SetSelectedCharacter(guid)
+	UIDropDownMenu_SetSelectedValue(LevelTimingsUI_CharactersDropDown, guid);
+end
 
-	if not LevelTimingsDB or not LevelTimingsDB[guid] or not LevelTimingsDB[guid].timings then
-		return {}
-	end
+function LevelTimingsUI_RefreshList()
+	LevelTimingsUI:RefreshList()
+end
 
-	local timings = LevelTimingsDB[guid].timings
+function LevelTimingsUI:RefreshList()
+	local guid = LevelTimingsUI.selectedGuid
+	local entry = LevelTimingsDB[guid]
+	LevelTimingsUI.sortedRows = LevelTimingsUI:BuildSortedLevelRows(entry)
+	LevelTimingsUI_FrameTitleText:SetText("Level Timings for " .. entry.name)
+	LevelTimingsUI:UpdateList()
+end
+
+function LevelTimingsUI:BuildSortedLevelRows(entry)
+	local timings = entry.timings
 	local levels = {}
 	local n = 1
-	for level, _ in pairs(timings) do
+	for level in pairs(timings) do
 		levels[n] = level
 		n = n + 1
 	end
@@ -70,7 +85,7 @@ function LevelTimingsUI:FormatPlayed(played)
 end
 
 function LevelTimingsUI:UpdateList()
-	local levelRows = LevelTimingsUI.rows
+	local levelRows = LevelTimingsUI.sortedRows
 	local scrollFrame = LevelTimingsUI_ScrollFrame
 	local offset = HybridScrollFrame_GetOffset(scrollFrame)
 	local buttons = scrollFrame.buttons
@@ -118,20 +133,20 @@ function LevelTimingsUI:UpdateList()
 end
 
 function LevelTimingsUI_OnLoad(self)
-	self:RegisterForDrag('LeftButton')
+	self:RegisterForDrag("LeftButton")
+	SetPortraitToTexture(LevelTimingsUI_FrameIcon, "Interface\\Icons\\INV_7XP_Inscription_TalentTome01");
 	LevelTimingsUI_FrameTitleText:SetText("Level Timings")
 	LevelTimingsUI_ScrollFrame.update = LevelTimingsUI.UpdateList
-	HybridScrollFrame_CreateButtons(LevelTimingsUI_ScrollFrame, 'LevelTimingsUI_ButtonTemplate')
+	HybridScrollFrame_CreateButtons(LevelTimingsUI_ScrollFrame, "LevelTimingsUI_ButtonTemplate")
 
 	if true then
 		-- TODO: Debug stuff
-		self:RegisterEvent('ADDON_LOADED')
-		self:SetScript('OnEvent', function(self, msg, addonName)
-			if addonName ~= 'LevelTimings' then
+		self:RegisterEvent("ADDON_LOADED")
+		self:SetScript("OnEvent", function(self, msg, addonName)
+			if addonName ~= "LevelTimings" then
 				return
 			end
-			self:UnregisterEvent('ADDON_LOADED')
-			print('LevelTimingsUI_OnLoad OnEvent', self, msg, addonName)
+			self:UnregisterEvent("ADDON_LOADED")
 			LevelTimingsUI:Show()
 		end)
 	else
@@ -141,6 +156,54 @@ function LevelTimingsUI_OnLoad(self)
 end
 
 function LevelTimingsUI_OnShow(self)
-	LevelTimingsUI:PopulateLevelRows()
-	LevelTimingsUI:UpdateList()
+	LevelTimingsUI:RefreshList()
+end
+
+function LevelTimingsUI_CharactersDropDown_Initialize()
+	local sortArray = {}
+	local n = 1
+	for guid, entry in pairs(LevelTimingsDB) do
+		sortArray[n] = {guid = guid, name = entry.name, realm = entry.realm, class = entry.class, faction = entry.faction}
+		n = n + 1
+	end
+
+	table.sort(sortArray, function(l, r)
+		if l.realm == r.realm then
+			return l.name < r.name
+		else
+			return l.realm < r.realm
+		end
+	end)
+
+	local info = UIDropDownMenu_CreateInfo();
+	for _, item in ipairs(sortArray) do
+		local name = item.name
+		if item.class and RAID_CLASS_COLORS[item.class] then
+			name = RAID_CLASS_COLORS[item.class]:WrapTextInColorCode(name)
+		end
+		local realm = item.realm
+		if item.faction and PLAYER_FACTION_GROUP[item.faction] then
+			realm = GetFactionColor(item.faction):WrapTextInColorCode(realm)
+		end
+
+		info.text = name .. " (" .. realm .. ")"
+		info.value = item.guid
+		info.func = LevelTimingsUI_CharactersDropDown_OnClick
+		info.checked = nil
+		UIDropDownMenu_AddButton(info);
+	end
+end
+
+function LevelTimingsUI_CharactersDropDown_OnLoad(self)
+	UIDropDownMenu_SetWidth(self, 200);
+	UIDropDownMenu_JustifyText(self, "LEFT")
+end
+
+function LevelTimingsUI_CharactersDropDown_OnClick(self)
+	LevelTimingsUI:SelectCharacter(self.value)
+end
+
+function LevelTimingsUI_CharactersDropDown_OnShow(self)
+	UIDropDownMenu_Initialize(self, LevelTimingsUI_CharactersDropDown_Initialize);
+	LevelTimingsUI:SetSelectedCharacter(LevelTimingsUI.selectedGuid)
 end

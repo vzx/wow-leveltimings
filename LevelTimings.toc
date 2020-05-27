@@ -5,5 +5,5 @@
 ## Notes: Records playing time for each level up
 ## SavedVariables: LevelTimingsDB
 
-LevelTimingsUI.xml
 LevelTimings.lua
+LevelTimingsUI.xml
