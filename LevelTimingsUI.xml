@@ -1,0 +1,185 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	<Script file="LevelTimingsUI.lua"/>
+
+	<Button name="LevelTimingsUI_ButtonTemplate" virtual="true">
+		<Size x="460" y="16"/>
+		<Layers>
+			<Layer level="BORDER">
+				<FontString parentKey="Level" inherits="GameFontNormalSmall" justifyH="RIGHT">
+					<Size x="28" y="14"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="4" y="-3"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Timestamp" inherits="GameFontHighlightSmall" justifyH="LEFT">
+					<Size x="115" y="14"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Level" relativePoint="RIGHT" x="8" y="0"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Played" inherits="GameFontHighlightSmall" justifyH="RIGHT">
+					<Size x="108" y="14"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Timestamp" relativePoint="RIGHT" x="8" y="0"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Zone" inherits="GameFontHighlightSmall" justifyH="LEFT">
+					<Size x="185" y="14"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Played" relativePoint="RIGHT" x="8" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD">
+			<Size x="460" y="16"/>
+			<Anchors>
+				<Anchor point="TOP" x="5" y="-2"/>
+			</Anchors>
+		</HighlightTexture>
+	</Button>
+
+	<Button name="LevelTimingsUI_ColumnHeaderTemplate" virtual="true">
+		<Size x="10" y="24"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Left" name="$parentLeft" file="Interface\FriendsFrame\WhoFrame-ColumnTabs">
+					<Size x="5" y="24"/>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.078125" top="0" bottom="0.75"/>
+				</Texture>
+				<Texture parentKey="Middle" name="$parentMiddle" file="Interface\FriendsFrame\WhoFrame-ColumnTabs">
+					<Size x="53" y="24"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Left" relativePoint="RIGHT"/>
+					</Anchors>
+					<TexCoords left="0.078125" right="0.90625" top="0" bottom="0.75"/>
+				</Texture>
+				<Texture parentKey="Right" name="$parentRight" file="Interface\FriendsFrame\WhoFrame-ColumnTabs">
+					<Size x="4" y="24"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Middle" relativePoint="RIGHT"/>
+					</Anchors>
+					<TexCoords left="0.90625" right="0.96875" top="0" bottom="0.75"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<ButtonText>
+			<Anchors>
+				<Anchor point="LEFT" x="8" y="0"/>
+			</Anchors>
+		</ButtonText>
+		<NormalFont style="GameFontHighlightSmall"/>
+	</Button>
+	
+	<Slider name="LevelTimingsUI_Slider" inherits="HybridScrollBarTrimTemplate" virtual="true">
+		<Anchors>
+			<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-16"/>
+			<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="14"/>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				self.trackBG:Show();
+				self.trackBG:SetVertexColor(0, 0, 0, 1);
+				self.doNotHide = true;
+			</OnLoad>
+		</Scripts>
+	</Slider>
+
+	<Frame name="LevelTimingsUI_Frame" toplevel="true" parent="UIParent" movable="true" enableMouse="true" hidden="true" inherits="PortraitFrameTemplate">
+		<Size x="500" y="500"/>
+		<Anchors>
+			<Anchor point="CENTER" x="0" y="0"/>
+		</Anchors>
+		<Layers>
+			<Layer level="OVERLAY" textureSubLevel="-1">
+				<Texture name="$parentIcon" file="Interface\FriendsFrame\Battlenet-Portrait">
+					<Size x="60" y="60"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="-5" y="7"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="LevelTimingsUI_FrameTitleText" inherits="GameFontNormal">
+					<Size x="250" y="16"/>
+					<Anchors>
+						<Anchor point="BOTTOM" x="3" y="-16"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame name="$parentInset" parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="4" y="-83" />
+					<Anchor point="BOTTOMRIGHT" x="-6" y="4" />
+				</Anchors>
+			</Frame>
+
+			<Frame name="LevelTimingsUI_ListFrame" setAllPoints="true" hidden="false">
+				<Frames>
+					<Button name="LevelTimingsUI_ListFrameColumnHeaderLevel" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="LEVEL_ABBR">
+						<Size x="32" y="24"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" x="7" y="-60"/>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.Middle:SetWidth(32-9)</OnLoad>
+						</Scripts>
+					</Button>
+					<Button name="LevelTimingsUI_ListFrameColumnHeaderDateTime" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="Date/time">
+						<Size x="125" y="24"/>
+						<Anchors>
+							<Anchor point="LEFT" relativeTo="LevelTimingsUI_ListFrameColumnHeaderLevel" relativePoint="RIGHT" x="-2" y="0"/>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.Middle:SetWidth(125-9)</OnLoad>
+						</Scripts>
+					</Button>
+					<Button name="LevelTimingsUI_ListFrameColumnHeaderPlayed" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="PLAYED">
+						<Size x="120" y="24"/>
+						<Anchors>
+							<Anchor point="LEFT" relativeTo="LevelTimingsUI_ListFrameColumnHeaderDateTime" relativePoint="RIGHT" x="-2" y="0"/>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.Middle:SetWidth(120-9)</OnLoad>
+						</Scripts>
+					</Button>
+					<Button name="LevelTimingsUI_ListFrameColumnHeaderZone" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="ZONE">
+						<Size x="195" y="24"/>
+						<Anchors>
+							<Anchor point="LEFT" relativeTo="LevelTimingsUI_ListFrameColumnHeaderPlayed" relativePoint="RIGHT" x="-2" y="0"/>
+						</Anchors>
+						<Scripts>
+							<OnLoad>self.Middle:SetWidth(195-9)</OnLoad>
+						</Scripts>
+					</Button>
+					<ScrollFrame name="LevelTimingsUI_ScrollFrame"  inherits="HybridScrollFrameTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="LevelTimingsUI_FrameInset" x="0" y="-2"/>
+							<Anchor point="BOTTOMRIGHT" relativeTo="LevelTimingsUI_FrameInset" x="-20" y="3"/>
+						</Anchors>
+						<Frames>
+							<Slider inherits="LevelTimingsUI_Slider"/>
+						</Frames>
+					</ScrollFrame>
+				</Frames>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnLoad function="LevelTimingsUI_OnLoad"/>
+			<OnShow function="LevelTimingsUI_OnShow"/>
+			<OnDragStart>
+				self:StartMoving()
+				self.isMoving = true
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing()
+				self.isMoving = false
+			</OnDragStop>
+		</Scripts>
+	</Frame>
+</Ui>
