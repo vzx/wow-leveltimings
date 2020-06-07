@@ -122,6 +122,16 @@
 				</Scripts>
 			</Frame>
 
+			<Button name="LevelTimingsUI_DeleteCharacterButton" inherits="UIPanelButtonTemplate" enabled="false" hidden="false" text="Delete">
+				<Size x="80" y="22"/>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="LevelTimingsUI_CharactersDropDown" relativePoint="RIGHT" x="-10" y="3"/>
+				</Anchors>
+				<Scripts>
+					<OnClick function="LevelTimingsUI_DeleteCharacterButton_Click"/>
+				</Scripts>
+			</Button>
+
 			<Frame name="$parentInset" parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="4" y="-83" />

@@ -9,6 +9,58 @@ SlashCmdList["LevelTimings"] = function(msg)
 	LevelTimingsUI:Show()
 end
 
+StaticPopupDialogs["LEVELTIMINGS_DELETE_CONFIRMATION"] = {
+	text = "",
+	button1 = "Yes",
+	button2 = "No",
+	OnAccept = function(self, guid)
+		LevelTimingsUI:DeleteFromDB(guid)
+	end,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3
+}
+
+function LevelTimingsUI:InitiateDelete()
+	local myGuid = UnitGUID("player")
+	local guid = self.selectedGuid
+	print(guid)
+	print(myGuid)
+
+	if myGuid == guid then
+		-- Prevent deletion of this/last character
+		return
+	end
+
+	if not LevelTimingsDB[guid] then
+		-- Should never happen but eh you never know
+		return
+	end
+
+	local item = LevelTimingsDB[guid]
+	local name = item.name
+	if item.class and RAID_CLASS_COLORS[item.class] then
+		name = RAID_CLASS_COLORS[item.class]:WrapTextInColorCode(name)
+	end
+
+	local realm = item.realm
+	if item.faction and PLAYER_FACTION_GROUP[item.faction] then
+		realm = GetFactionColor(item.faction):WrapTextInColorCode(realm)
+	end
+
+	StaticPopupDialogs["LEVELTIMINGS_DELETE_CONFIRMATION"].text = "Are you sure you want to permanently delete all level timings for:\n\n"
+		.. name .. " (" .. realm .. ")" .. "\n\nWARNING: this is irreversible!"
+	local popup = StaticPopup_Show("LEVELTIMINGS_DELETE_CONFIRMATION")
+	if popup then
+		popup.data = guid
+	end
+end
+
+function LevelTimingsUI:DeleteFromDB(guid)
+	LevelTimingsDB[guid] = nil
+	LevelTimingsUI:SelectCharacter(UnitGUID("player"))
+end
+
 function LevelTimingsUI_ToggleShown()
 	LevelTimingsUI_Frame:SetShown(not LevelTimingsUI_Frame:IsShown())
 end
@@ -25,6 +77,7 @@ end
 
 function LevelTimingsUI:SetSelectedCharacterInDropDown(guid)
 	UIDropDownMenu_SetSelectedValue(LevelTimingsUI_CharactersDropDown, guid);
+	LevelTimingsUI_DeleteCharacterButton:SetEnabled(guid ~= UnitGUID("player"))
 end
 
 function LevelTimingsUI_RefreshList()
@@ -212,4 +265,8 @@ end
 function LevelTimingsUI_CharactersDropDown_OnShow(self)
 	UIDropDownMenu_Initialize(self, LevelTimingsUI_CharactersDropDown_Initialize);
 	LevelTimingsUI:SetSelectedCharacterInDropDown(LevelTimingsUI.selectedGuid)
+end
+
+function LevelTimingsUI_DeleteCharacterButton_Click(self)
+	LevelTimingsUI:InitiateDelete()
 end
