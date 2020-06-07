@@ -167,7 +167,7 @@
 							<OnLoad>self.Middle:SetWidth(195-9)</OnLoad>
 						</Scripts>
 					</Button>
-					<ScrollFrame name="LevelTimingsUI_ScrollFrame"  inherits="HybridScrollFrameTemplate">
+					<ScrollFrame name="LevelTimingsUI_ScrollFrame" inherits="HybridScrollFrameTemplate">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeTo="LevelTimingsUI_FrameInset" x="0" y="-2"/>
 							<Anchor point="BOTTOMRIGHT" relativeTo="LevelTimingsUI_FrameInset" x="-20" y="3"/>

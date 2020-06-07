@@ -9,17 +9,21 @@ SlashCmdList["LevelTimings"] = function(msg)
 	LevelTimingsUI:Show()
 end
 
+function LevelTimingsUI_ToggleShown()
+	LevelTimingsUI_Frame:SetShown(not LevelTimingsUI_Frame:IsShown())
+end
+
 function LevelTimingsUI:Show()
 	LevelTimingsUI_Frame:Show()
 end
 
 function LevelTimingsUI:SelectCharacter(guid)
 	LevelTimingsUI.selectedGuid = guid
-	LevelTimingsUI:SetSelectedCharacter(guid)
+	LevelTimingsUI:SetSelectedCharacterInDropDown(guid)
 	LevelTimingsUI:RefreshList()
 end
 
-function LevelTimingsUI:SetSelectedCharacter(guid)
+function LevelTimingsUI:SetSelectedCharacterInDropDown(guid)
 	UIDropDownMenu_SetSelectedValue(LevelTimingsUI_CharactersDropDown, guid);
 end
 
@@ -32,6 +36,8 @@ function LevelTimingsUI:RefreshList()
 	local entry = LevelTimingsDB[guid]
 	LevelTimingsUI.sortedRows = LevelTimingsUI:BuildSortedLevelRows(entry)
 	LevelTimingsUI_FrameTitleText:SetText("Level Timings for " .. entry.name)
+	HybridScrollFrame_SetOffset(LevelTimingsUI_ScrollFrame, 0)
+	LevelTimingsUI_ScrollFrame.scrollBar:SetValue(0)
 	LevelTimingsUI:UpdateList()
 end
 
@@ -139,7 +145,7 @@ function LevelTimingsUI_OnLoad(self)
 	LevelTimingsUI_ScrollFrame.update = LevelTimingsUI.UpdateList
 	HybridScrollFrame_CreateButtons(LevelTimingsUI_ScrollFrame, "LevelTimingsUI_ButtonTemplate")
 
-	if true then
+	if false then
 		-- TODO: Debug stuff
 		self:RegisterEvent("ADDON_LOADED")
 		self:SetScript("OnEvent", function(self, msg, addonName)
@@ -205,5 +211,5 @@ end
 
 function LevelTimingsUI_CharactersDropDown_OnShow(self)
 	UIDropDownMenu_Initialize(self, LevelTimingsUI_CharactersDropDown_Initialize);
-	LevelTimingsUI:SetSelectedCharacter(LevelTimingsUI.selectedGuid)
+	LevelTimingsUI:SetSelectedCharacterInDropDown(LevelTimingsUI.selectedGuid)
 end
