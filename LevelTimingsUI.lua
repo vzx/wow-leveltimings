@@ -37,15 +37,8 @@ function LevelTimingsUI:InitiateDelete()
 	end
 
 	local item = LevelTimingsDB[guid]
-	local name = item.name
-	if item.class and RAID_CLASS_COLORS[item.class] then
-		name = RAID_CLASS_COLORS[item.class]:WrapTextInColorCode(name)
-	end
-
-	local realm = item.realm
-	if item.faction and PLAYER_FACTION_GROUP[item.faction] then
-		realm = GetFactionColor(item.faction):WrapTextInColorCode(realm)
-	end
+	local name = LevelTimingsUI:ColoredName(item)
+	local realm = GetFactionColor(item.faction):WrapTextInColorCode(item.realm)
 
 	StaticPopupDialogs["LEVELTIMINGS_DELETE_CONFIRMATION"].text = "Are you sure you want to permanently delete all level timings for:\n\n"
 		.. name .. " (" .. realm .. ")" .. "\n\nWARNING: this is irreversible!"
@@ -85,7 +78,7 @@ end
 
 function LevelTimingsUI:SetSelectedCharacterInDropDown()
 	UIDropDownMenu_SetSelectedValue(LevelTimingsUI_CharactersDropDown, LevelTimingsUI.selectedGuid)
-	LevelTimingsUI_DeleteCharacterButton:SetEnabled(guid ~= UnitGUID("player"))
+	LevelTimingsUI_DeleteCharacterButton:SetEnabled(LevelTimingsUI.selectedGuid ~= UnitGUID("player"))
 end
 
 function LevelTimingsUI:SetSelectedCompareInDropDown()
@@ -101,8 +94,10 @@ function LevelTimingsUI:RefreshList()
 	if LevelTimingsUI.compareGuid ~= "" then
 		compareEntry = LevelTimingsDB[LevelTimingsUI.compareGuid]
 		titleText = titleText .. " vs " .. LevelTimingsUI:ColoredName(compareEntry)
-		LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare:SetText(RAID_CLASS_COLORS[compareEntry.class]:WrapTextInColorCode(compareEntry.name))
+		LevelTimingsUI_ListFrameColumnHeaderPlayed:SetText(LevelTimingsUI:ColoredName(entry))
+		LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare:SetText(LevelTimingsUI:ColoredName(compareEntry))
 	else
+		LevelTimingsUI_ListFrameColumnHeaderPlayed:SetText(PLAYED)
 		LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare:SetText(ZONE)
 	end
 
@@ -292,7 +287,7 @@ function LevelTimingsUI_OnLoad(self)
 	LevelTimingsUI_ScrollFrame.update = LevelTimingsUI.UpdateList
 	HybridScrollFrame_CreateButtons(LevelTimingsUI_ScrollFrame, "LevelTimingsUI_ButtonTemplate")
 
-	if true then
+	if false then
 		-- TODO: Debug stuff
 		self:RegisterEvent("ADDON_LOADED")
 		self:SetScript("OnEvent", function(self, msg, addonName)
