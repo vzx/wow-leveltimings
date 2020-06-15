@@ -1,6 +1,7 @@
 
 local LevelTimingsUI = {
 	selectedGuid = UnitGUID("player"),
+	compareGuid = "",
 	sortedRows = {}
 }
 
@@ -24,8 +25,6 @@ StaticPopupDialogs["LEVELTIMINGS_DELETE_CONFIRMATION"] = {
 function LevelTimingsUI:InitiateDelete()
 	local myGuid = UnitGUID("player")
 	local guid = self.selectedGuid
-	print(guid)
-	print(myGuid)
 
 	if myGuid == guid then
 		-- Prevent deletion of this/last character
@@ -59,6 +58,9 @@ end
 function LevelTimingsUI:DeleteFromDB(guid)
 	LevelTimingsDB[guid] = nil
 	LevelTimingsUI:SelectCharacter(UnitGUID("player"))
+	if guid == LevelTimingsUI.compareGuid then
+		LevelTimingsUI:SelectCompare("")
+	end
 end
 
 function LevelTimingsUI_ToggleShown()
@@ -71,31 +73,52 @@ end
 
 function LevelTimingsUI:SelectCharacter(guid)
 	LevelTimingsUI.selectedGuid = guid
-	LevelTimingsUI:SetSelectedCharacterInDropDown(guid)
+	LevelTimingsUI:SetSelectedCharacterInDropDown()
 	LevelTimingsUI:RefreshList()
 end
 
-function LevelTimingsUI:SetSelectedCharacterInDropDown(guid)
-	UIDropDownMenu_SetSelectedValue(LevelTimingsUI_CharactersDropDown, guid);
+function LevelTimingsUI:SelectCompare(guid)
+	LevelTimingsUI.compareGuid = guid
+	LevelTimingsUI:SetSelectedCompareInDropDown()
+	LevelTimingsUI:RefreshList()
+end
+
+function LevelTimingsUI:SetSelectedCharacterInDropDown()
+	UIDropDownMenu_SetSelectedValue(LevelTimingsUI_CharactersDropDown, LevelTimingsUI.selectedGuid)
 	LevelTimingsUI_DeleteCharacterButton:SetEnabled(guid ~= UnitGUID("player"))
 end
 
-function LevelTimingsUI_RefreshList()
-	LevelTimingsUI:RefreshList()
+function LevelTimingsUI:SetSelectedCompareInDropDown()
+	UIDropDownMenu_SetSelectedValue(LevelTimingsUI_CompareDropDown, LevelTimingsUI.compareGuid)
 end
 
 function LevelTimingsUI:RefreshList()
 	local guid = LevelTimingsUI.selectedGuid
 	local entry = LevelTimingsDB[guid]
-	LevelTimingsUI.sortedRows = LevelTimingsUI:BuildSortedLevelRows(entry)
-	LevelTimingsUI_FrameTitleText:SetText("Level Timings for " .. entry.name)
+	local compareEntry = nil
+	local titleText = "Level Timings for " .. LevelTimingsUI:ColoredName(entry)
+
+	if LevelTimingsUI.compareGuid ~= "" then
+		compareEntry = LevelTimingsDB[LevelTimingsUI.compareGuid]
+		titleText = titleText .. " vs " .. LevelTimingsUI:ColoredName(compareEntry)
+		LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare:SetText(RAID_CLASS_COLORS[compareEntry.class]:WrapTextInColorCode(compareEntry.name))
+	else
+		LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare:SetText(ZONE)
+	end
+
+	LevelTimingsUI_FrameTitleText:SetText(titleText)
+	LevelTimingsUI.sortedRows = LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry)
 	HybridScrollFrame_SetOffset(LevelTimingsUI_ScrollFrame, 0)
 	LevelTimingsUI_ScrollFrame.scrollBar:SetValue(0)
 	LevelTimingsUI:UpdateList()
 end
 
-function LevelTimingsUI:BuildSortedLevelRows(entry)
+function LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry)
 	local timings = entry.timings
+	local compareTimings = {}
+	if compareEntry then
+		compareTimings = compareEntry.timings
+	end
 	local levels = {}
 	local n = 1
 	for level in pairs(timings) do
@@ -106,16 +129,19 @@ function LevelTimingsUI:BuildSortedLevelRows(entry)
 
 	local levelRows = {}
 	for n, level in ipairs(levels) do
-		local t = timings[level]
 		levelRows[n] = {
 			level = level,
-			timings = t
+			timings = timings[level],
+			compareTimings = compareTimings[level]
 		}
 	end
 	return levelRows
 end
 
 function LevelTimingsUI:FormatPlayed(played)
+	if played == 0 then
+		return "0s"
+	end
 	local remaining = played
 	local times = {}
 	times[1] = {amount = math.floor(remaining / 86400), suffix = "d"}
@@ -159,25 +185,44 @@ function LevelTimingsUI:UpdateList()
 		if index <= rowCount then
 			local row = levelRows[index]
 			local timings = row.timings
+			local compareTimings = row.compareTimings
 
 			button.Level:SetText(row.level)
 			button.Timestamp:SetText(date("%Y-%m-%d %H:%M:%S", timings.timestamp))
 			button.Played:SetText(LevelTimingsUI:FormatPlayed(timings.played))
 
-			local zone, subzone = timings.zone, timings.subzone
-			local zoneText = ""
-			if zone then
-				zoneText = zone
-				if subzone and subzone ~= "" then
-					zoneText = zoneText .. " (" .. subzone .. ")"
+			if LevelTimingsUI.compareGuid ~= "" then
+				local compareText = "-"
+				if compareTimings then
+					local delta = compareTimings.played - timings.played
+					compareText = LevelTimingsUI:FormatPlayed(compareTimings.played) .. " ("
+					if delta >= 0 then
+						compareText = compareText .. "|cFFFF0000+"
+					else
+						compareText = compareText .. "|cFF00FF00-"
+					end
+					compareText = compareText .. LevelTimingsUI:FormatPlayed(math.abs(delta)) .. "|r)"
 				end
-				button.Zone:SetTextColor(1, 1, 1)
+				button.ZoneOrCompare:SetText(compareText)
+				button.ZoneOrCompare:SetJustifyH("RIGHT")
+				button.ZoneOrCompare:SetTextColor(1, 1, 1)
 			else
-				zoneText = "(Unknown)"
-				button.Zone:SetTextColor(0.5, 0.5, 0.5)
-			end
+				local zone, subzone = timings.zone, timings.subzone
+				local zoneText = ""
+				if zone then
+					zoneText = zone
+					if subzone and subzone ~= "" then
+						zoneText = zoneText .. " (" .. subzone .. ")"
+					end
+					button.ZoneOrCompare:SetTextColor(1, 1, 1)
+				else
+					zoneText = "(Unknown)"
+					button.ZoneOrCompare:SetTextColor(0.5, 0.5, 0.5)
+				end
 
-			button.Zone:SetText(zoneText)
+				button.ZoneOrCompare:SetText(zoneText)
+				button.ZoneOrCompare:SetJustifyH("LEFT")
+			end
 
 			button.index = index
 			button:Show()
@@ -191,9 +236,58 @@ function LevelTimingsUI:UpdateList()
 	HybridScrollFrame_Update(scrollFrame, rowCount * buttonHeight, usedHeight)
 end
 
+function LevelTimingsUI:CharactersDropDown_Initialize()
+	LevelTimingsUI:PopulateDropDown(function(self) LevelTimingsUI:SelectCharacter(self.value) end)
+end
+
+function LevelTimingsUI:CompareDropDown_Initialize()
+	local onClickFunc = function(self) LevelTimingsUI:SelectCompare(self.value) end
+	local info = UIDropDownMenu_CreateInfo()
+	info.text = "-"
+	info.value = ""
+	info.func = onClickFunc
+	info.checked = nil
+	UIDropDownMenu_AddButton(info)
+
+	LevelTimingsUI:PopulateDropDown(onClickFunc)
+end
+
+function LevelTimingsUI:PopulateDropDown(onItemClick)
+	local sortArray = {}
+	local n = 1
+	for guid, entry in pairs(LevelTimingsDB) do
+		sortArray[n] = {guid = guid, name = entry.name, realm = entry.realm, class = entry.class, faction = entry.faction}
+		n = n + 1
+	end
+
+	table.sort(sortArray, function(l, r)
+		if l.realm == r.realm then
+			return l.name < r.name
+		else
+			return l.realm < r.realm
+		end
+	end)
+
+	local info = UIDropDownMenu_CreateInfo()
+	for _, item in ipairs(sortArray) do
+		local name = LevelTimingsUI:ColoredName(item)
+		local realm = GetFactionColor(item.faction):WrapTextInColorCode(item.realm)
+
+		info.text = name .. " (" .. realm .. ")"
+		info.value = item.guid
+		info.func = onItemClick
+		info.checked = nil
+		UIDropDownMenu_AddButton(info)
+	end
+end
+
+function LevelTimingsUI:ColoredName(item)
+	return RAID_CLASS_COLORS[item.class]:WrapTextInColorCode(item.name)
+end
+
 function LevelTimingsUI_OnLoad(self)
 	self:RegisterForDrag("LeftButton")
-	SetPortraitToTexture(LevelTimingsUI_FrameIcon, "Interface\\Icons\\INV_7XP_Inscription_TalentTome01");
+	SetPortraitToTexture(LevelTimingsUI_FrameIcon, "Interface\\Icons\\INV_7XP_Inscription_TalentTome01")
 	LevelTimingsUI_FrameTitleText:SetText("Level Timings")
 	LevelTimingsUI_ScrollFrame.update = LevelTimingsUI.UpdateList
 	HybridScrollFrame_CreateButtons(LevelTimingsUI_ScrollFrame, "LevelTimingsUI_ButtonTemplate")
@@ -218,53 +312,19 @@ function LevelTimingsUI_OnShow(self)
 	LevelTimingsUI:RefreshList()
 end
 
-function LevelTimingsUI_CharactersDropDown_Initialize()
-	local sortArray = {}
-	local n = 1
-	for guid, entry in pairs(LevelTimingsDB) do
-		sortArray[n] = {guid = guid, name = entry.name, realm = entry.realm, class = entry.class, faction = entry.faction}
-		n = n + 1
-	end
-
-	table.sort(sortArray, function(l, r)
-		if l.realm == r.realm then
-			return l.name < r.name
-		else
-			return l.realm < r.realm
-		end
-	end)
-
-	local info = UIDropDownMenu_CreateInfo();
-	for _, item in ipairs(sortArray) do
-		local name = item.name
-		if item.class and RAID_CLASS_COLORS[item.class] then
-			name = RAID_CLASS_COLORS[item.class]:WrapTextInColorCode(name)
-		end
-		local realm = item.realm
-		if item.faction and PLAYER_FACTION_GROUP[item.faction] then
-			realm = GetFactionColor(item.faction):WrapTextInColorCode(realm)
-		end
-
-		info.text = name .. " (" .. realm .. ")"
-		info.value = item.guid
-		info.func = LevelTimingsUI_CharactersDropDown_OnClick
-		info.checked = nil
-		UIDropDownMenu_AddButton(info);
-	end
-end
-
 function LevelTimingsUI_CharactersDropDown_OnLoad(self)
-	UIDropDownMenu_SetWidth(self, 200);
+	UIDropDownMenu_SetWidth(self, 200)
 	UIDropDownMenu_JustifyText(self, "LEFT")
 end
 
-function LevelTimingsUI_CharactersDropDown_OnClick(self)
-	LevelTimingsUI:SelectCharacter(self.value)
+function LevelTimingsUI_CharactersDropDown_OnShow(self)
+	UIDropDownMenu_Initialize(self, LevelTimingsUI.CharactersDropDown_Initialize)
+	LevelTimingsUI:SetSelectedCharacterInDropDown()
 end
 
-function LevelTimingsUI_CharactersDropDown_OnShow(self)
-	UIDropDownMenu_Initialize(self, LevelTimingsUI_CharactersDropDown_Initialize);
-	LevelTimingsUI:SetSelectedCharacterInDropDown(LevelTimingsUI.selectedGuid)
+function LevelTimingsUI_CompareDropDown_OnShow(self)
+	UIDropDownMenu_Initialize(self, LevelTimingsUI.CompareDropDown_Initialize)
+	LevelTimingsUI:SetSelectedCompareInDropDown()
 end
 
 function LevelTimingsUI_DeleteCharacterButton_Click(self)

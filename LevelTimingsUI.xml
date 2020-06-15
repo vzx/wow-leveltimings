@@ -23,7 +23,7 @@
 						<Anchor point="LEFT" relativeKey="$parent.Timestamp" relativePoint="RIGHT" x="8" y="0"/>
 					</Anchors>
 				</FontString>
-				<FontString parentKey="Zone" inherits="GameFontHighlightSmall" justifyH="LEFT">
+				<FontString parentKey="ZoneOrCompare" inherits="GameFontHighlightSmall" justifyH="LEFT">
 					<Size x="185" y="14"/>
 					<Anchors>
 						<Anchor point="LEFT" relativeKey="$parent.Played" relativePoint="RIGHT" x="8" y="0"/>
@@ -103,10 +103,24 @@
 				</Texture>
 			</Layer>
 			<Layer level="OVERLAY">
-				<FontString name="LevelTimingsUI_FrameTitleText" inherits="GameFontNormal">
+				<FontString name="$parentTitleText" inherits="GameFontNormal">
 					<Size x="250" y="16"/>
 					<Anchors>
 						<Anchor point="BOTTOM" x="3" y="-16"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="LevelTimingsUI_CharactersDropDownCaption" inherits="GameFontNormal" text="Character:" justifyH="RIGHT">
+					<Size x="75" y="20"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="45" y="-29"/>
+					</Anchors>
+				</FontString>
+				<FontString name="LevelTimingsUI_CompareDropDownCaption" inherits="GameFontNormal" text="Compare to:" justifyH="RIGHT">
+					<Size x="75" y="20"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="45" y="-58"/>
 					</Anchors>
 				</FontString>
 			</Layer>
@@ -114,7 +128,7 @@
 		<Frames>
 			<Frame name="LevelTimingsUI_CharactersDropDown" inherits="UIDropDownMenuTemplate" hidden="false">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="43" y="-27"/>
+					<Anchor point="LEFT" x="-10" y="-3" relativeTo="LevelTimingsUI_CharactersDropDownCaption" relativePoint="RIGHT"/>
 				</Anchors>
 				<Scripts>
 					<OnLoad function="LevelTimingsUI_CharactersDropDown_OnLoad"/>
@@ -122,7 +136,7 @@
 				</Scripts>
 			</Frame>
 
-			<Button name="LevelTimingsUI_DeleteCharacterButton" inherits="UIPanelButtonTemplate" enabled="false" hidden="false" text="Delete">
+			<Button name="LevelTimingsUI_DeleteCharacterButton" inherits="UIPanelButtonTemplate" hidden="false" text="Delete">
 				<Size x="80" y="22"/>
 				<Anchors>
 					<Anchor point="LEFT" relativeTo="LevelTimingsUI_CharactersDropDown" relativePoint="RIGHT" x="-10" y="3"/>
@@ -132,9 +146,19 @@
 				</Scripts>
 			</Button>
 
+			<Frame name="LevelTimingsUI_CompareDropDown" inherits="UIDropDownMenuTemplate" hidden="false">
+				<Anchors>
+					<Anchor point="LEFT" x="-10" y="-3" relativeTo="LevelTimingsUI_CompareDropDownCaption" relativePoint="RIGHT"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad function="LevelTimingsUI_CharactersDropDown_OnLoad"/>
+					<OnShow function="LevelTimingsUI_CompareDropDown_OnShow"/>
+				</Scripts>
+			</Frame>
+
 			<Frame name="$parentInset" parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="4" y="-83" />
+					<Anchor point="TOPLEFT" x="4" y="-115" />
 					<Anchor point="BOTTOMRIGHT" x="-6" y="4" />
 				</Anchors>
 			</Frame>
@@ -144,7 +168,7 @@
 					<Button name="LevelTimingsUI_ListFrameColumnHeaderLevel" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="LEVEL_ABBR">
 						<Size x="32" y="24"/>
 						<Anchors>
-							<Anchor point="TOPLEFT" x="7" y="-60"/>
+							<Anchor point="TOPLEFT" x="7" y="-92"/>
 						</Anchors>
 						<Scripts>
 							<OnLoad>self.Middle:SetWidth(32-9)</OnLoad>
@@ -168,7 +192,7 @@
 							<OnLoad>self.Middle:SetWidth(120-9)</OnLoad>
 						</Scripts>
 					</Button>
-					<Button name="LevelTimingsUI_ListFrameColumnHeaderZone" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="ZONE">
+					<Button name="LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="ZONE">
 						<Size x="195" y="24"/>
 						<Anchors>
 							<Anchor point="LEFT" relativeTo="LevelTimingsUI_ListFrameColumnHeaderPlayed" relativePoint="RIGHT" x="-2" y="0"/>
