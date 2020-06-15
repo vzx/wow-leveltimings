@@ -292,7 +292,7 @@ function LevelTimingsUI_OnLoad(self)
 	LevelTimingsUI_ScrollFrame.update = LevelTimingsUI.UpdateList
 	HybridScrollFrame_CreateButtons(LevelTimingsUI_ScrollFrame, "LevelTimingsUI_ButtonTemplate")
 
-	if false then
+	if true then
 		-- TODO: Debug stuff
 		self:RegisterEvent("ADDON_LOADED")
 		self:SetScript("OnEvent", function(self, msg, addonName)
@@ -313,7 +313,7 @@ function LevelTimingsUI_OnShow(self)
 end
 
 function LevelTimingsUI_CharactersDropDown_OnLoad(self)
-	UIDropDownMenu_SetWidth(self, 200)
+	UIDropDownMenu_SetWidth(self, 240)
 	UIDropDownMenu_JustifyText(self, "LEFT")
 end
 
