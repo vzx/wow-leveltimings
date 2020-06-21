@@ -137,54 +137,42 @@ function LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry, fromLevel)
 	end
 	table.sort(levels)
 
-	local playedOffset = 0
-	local compareOffset = 0
-	if fromLevel > 0 then
-		if timings[fromLevel] then
-			playedOffset = timings[fromLevel].played or 0
-		end
-		if compareTimings[fromLevel] then
-			compareOffset = compareTimings[fromLevel].played or 0
-		end
-	end
-
 	local levelRows = {}
 	for n, level in ipairs(levels) do
 		levelRows[n] = {
 			level = level,
-			timings = transformPlayed(timings[level], playedOffset),
-			compareTimings = transformPlayed(compareTimings[level], compareOffset)
+			timings = timings[level],
+			compareTimings = compareTimings[level]
 		}
 	end
 	return levelRows
 end
 
-function transformPlayed(entry, offset)
-	if entry then
-		return {
-			played = entry.played - offset,
-			timestamp = entry.timestamp,
-			zone = entry.zone,
-			subzone = entry.subzone
-		}
-	else
-		return nil
-	end
-end
-
 function LevelTimingsUI:BuildDisplayRows(levelRows)
 	local displayRows = {}
+	local playedOffset = 0
+	local compareOffset = 0
 	for index in ipairs(levelRows) do
 		local row = levelRows[index]
+		local level = row.level
 		local timings = row.timings
 		local compareTimings = row.compareTimings
+
+		if level == LevelTimingsUI.fromLevel then
+			playedOffset = timings.played
+			if compareTimings then
+				compareOffset = compareTimings.played
+			end
+		end
+
+		local played = timings.played - playedOffset
 
 		local entry = {}
 		displayRows[index] = entry
 
 		entry.level = row.level
 		entry.timestamp = date("%Y-%m-%d %H:%M:%S", timings.timestamp)
-		entry.played = LevelTimingsUI:FormatPlayed(timings.played)
+		entry.played = LevelTimingsUI:FormatPlayed(played)
 
 		local zoneOrCompare = {justifyH = "LEFT", color = 1}
 		entry.zoneOrCompare = zoneOrCompare
@@ -192,8 +180,9 @@ function LevelTimingsUI:BuildDisplayRows(levelRows)
 		if LevelTimingsUI.compareGuid ~= "" then
 			local compareText = "-"
 			if compareTimings then
-				local delta = compareTimings.played - timings.played
-				compareText = LevelTimingsUI:FormatPlayed(compareTimings.played) .. " ("
+				local comparePlayed = compareTimings.played - compareOffset
+				local delta = comparePlayed - played
+				compareText = LevelTimingsUI:FormatPlayed(comparePlayed) .. " ("
 				if delta >= 0 then
 					compareText = compareText .. "|cFFFF0000+"
 				else
