@@ -1,0 +1,36 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	<Script file="MinimapButton.lua"/>
+
+	<Button parent="Minimap" name="LevelTimingsUI_MinimapButton" frameStrata="MEDIUM" toplevel="true">
+		<Size x="33" y="33" />
+		<Anchors>
+			<Anchor point="CENTER" relativeTo="Minimap" relativePoint="RIGHT" x="5" y="0" />
+		</Anchors>		
+		<Scripts>
+			<OnLoad function="LevelTimingsUI_MinimapButton_OnLoad"/>
+			<OnDragStart function="LevelTimingsUI_MinimapButton_OnDragStart"/>
+			<OnDragStop function="LevelTimingsUI_MinimapButton_OnDragStop"/>
+			<OnClick function="LevelTimingsUI_MinimapButton_OnClick"/>
+		</Scripts>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Icon" file="Interface\Icons\INV_7XP_Inscription_TalentTome01">
+					<Size x="21" y="21" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="7" y="-6" />
+					</Anchors>
+					<TexCoords left="0.075" right="0.925" top="0.075" bottom="0.925"/>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture file="Interface\Minimap\MiniMap-TrackingBorder">
+					<Size x="56" y="56" />
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<HighlightTexture alphaMode="ADD" file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight"/>
+	</Button>
+</Ui>

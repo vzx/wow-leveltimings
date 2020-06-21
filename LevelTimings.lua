@@ -162,3 +162,17 @@ end
 function LevelTimings:playerGuid()
     return UnitGUID("player")
 end
+
+function LevelTimings_GetConfig(key)
+    if not LevelTimingsConfig then
+        LevelTimingsConfig = {}
+    end
+    return LevelTimingsConfig[key]
+end
+
+function LevelTimings_SetConfig(key, value)
+    if not LevelTimingsConfig then
+        LevelTimingsConfig = {}
+    end
+    LevelTimingsConfig[key] = value
+end

@@ -3,7 +3,8 @@
 ## Author: vzx8
 ## Version: 1
 ## Notes: Records playing time for each level up
-## SavedVariables: LevelTimingsDB
+## SavedVariables: LevelTimingsDB, LevelTimingsConfig
 
 LevelTimings.lua
 LevelTimingsUI.xml
+MinimapButton.xml
