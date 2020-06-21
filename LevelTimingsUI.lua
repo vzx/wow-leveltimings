@@ -2,7 +2,6 @@
 local LevelTimingsUI = {
 	selectedGuid = UnitGUID("player"),
 	compareGuid = "",
-	sortedRows = {},
 	displayRows = {},
 	fromLevel = 0
 }
@@ -114,14 +113,15 @@ function LevelTimingsUI:RefreshList()
 	end
 
 	LevelTimingsUI_FrameTitleText:SetText(titleText)
-	LevelTimingsUI.sortedRows = LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry)
-	LevelTimingsUI.displayRows = LevelTimingsUI:BuildDisplayRows(LevelTimingsUI.sortedRows)
+	local sortedRows = LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry, LevelTimingsUI.fromLevel)
+	LevelTimingsUI.displayRows = LevelTimingsUI:BuildDisplayRows(sortedRows)
 	HybridScrollFrame_SetOffset(LevelTimingsUI_ScrollFrame, 0)
 	LevelTimingsUI_ScrollFrame.scrollBar:SetValue(0)
 	LevelTimingsUI:UpdateList()
 end
 
-function LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry)
+
+function LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry, fromLevel)
 	local timings = entry.timings
 	local compareTimings = {}
 	if compareEntry then
@@ -130,20 +130,46 @@ function LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry)
 	local levels = {}
 	local n = 1
 	for level in pairs(timings) do
-		levels[n] = level
-		n = n + 1
+		if level >= fromLevel then
+			levels[n] = level
+			n = n + 1
+		end
 	end
 	table.sort(levels)
+
+	local playedOffset = 0
+	local compareOffset = 0
+	if fromLevel > 0 then
+		if timings[fromLevel] then
+			playedOffset = timings[fromLevel].played or 0
+		end
+		if compareTimings[fromLevel] then
+			compareOffset = compareTimings[fromLevel].played or 0
+		end
+	end
 
 	local levelRows = {}
 	for n, level in ipairs(levels) do
 		levelRows[n] = {
 			level = level,
-			timings = timings[level],
-			compareTimings = compareTimings[level]
+			timings = transformPlayed(timings[level], playedOffset),
+			compareTimings = transformPlayed(compareTimings[level], compareOffset)
 		}
 	end
 	return levelRows
+end
+
+function transformPlayed(entry, offset)
+	if entry then
+		return {
+			played = entry.played - offset,
+			timestamp = entry.timestamp,
+			zone = entry.zone,
+			subzone = entry.subzone
+		}
+	else
+		return nil
+	end
 end
 
 function LevelTimingsUI:BuildDisplayRows(levelRows)
@@ -229,7 +255,6 @@ function LevelTimingsUI:FormatPlayed(played)
 end
 
 function LevelTimingsUI:UpdateList()
-	local levelRows = LevelTimingsUI.sortedRows
 	local displayRows = LevelTimingsUI.displayRows
 	local scrollFrame = LevelTimingsUI_ScrollFrame
 	local offset = HybridScrollFrame_GetOffset(scrollFrame)
