@@ -155,9 +155,7 @@ function LevelTimings:handleTimePlayedLevelUp(totalTimePlayedSec, newLevels)
         end
 
         -- Refresh the UI in case it is open at this time
-        if LevelTimingsUI_RefreshList then
-            LevelTimingsUI_RefreshList()
-        end
+        LevelTimingsUI_RefreshList()
     end
 end
 

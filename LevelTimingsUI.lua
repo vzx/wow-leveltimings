@@ -85,6 +85,10 @@ function LevelTimingsUI:SetSelectedCompareInDropDown()
 	UIDropDownMenu_SetSelectedValue(LevelTimingsUI_CompareDropDown, LevelTimingsUI.compareGuid)
 end
 
+function LevelTimingsUI_RefreshList()
+	LevelTimingsUI:RefreshList()
+end
+
 function LevelTimingsUI:RefreshList()
 	local guid = LevelTimingsUI.selectedGuid
 	local entry = LevelTimingsDB[guid]
