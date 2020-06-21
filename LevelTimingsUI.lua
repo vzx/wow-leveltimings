@@ -2,7 +2,8 @@
 local LevelTimingsUI = {
 	selectedGuid = UnitGUID("player"),
 	compareGuid = "",
-	sortedRows = {}
+	sortedRows = {},
+	fromLevel = 0
 }
 
 SLASH_LevelTimings1 = "/leveltimings"
@@ -83,6 +84,12 @@ end
 
 function LevelTimingsUI:SetSelectedCompareInDropDown()
 	UIDropDownMenu_SetSelectedValue(LevelTimingsUI_CompareDropDown, LevelTimingsUI.compareGuid)
+end
+
+function LevelTimingsUI_SetFromLevel(self, level)
+	LevelTimingsUI_FromLevelText:SetText(level)
+	LevelTimingsUI.fromLevel = level
+	LevelTimingsUI:RefreshList()
 end
 
 function LevelTimingsUI_RefreshList()
@@ -328,4 +335,13 @@ end
 
 function LevelTimingsUI_DeleteCharacterButton_Click(self)
 	LevelTimingsUI:InitiateDelete()
+end
+
+function LevelTimingsUI_FromLevelSlider_OnLoad(self)
+	self:SetObeyStepOnDrag(true)
+	local name = self:GetName()
+	_G[name .. "Low"]:Hide()
+	_G[name .. "High"]:Hide()
+	-- Registering it here prevents OnValueChanged from triggering when the default value is set
+	self:SetScript("OnValueChanged", LevelTimingsUI_SetFromLevel)
 end

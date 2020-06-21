@@ -81,9 +81,9 @@
 		</Anchors>
 		<Scripts>
 			<OnLoad>
-				self.trackBG:Show();
-				self.trackBG:SetVertexColor(0, 0, 0, 1);
-				self.doNotHide = true;
+				self.trackBG:Show()
+				self.trackBG:SetVertexColor(0, 0, 0, 1)
+				self.doNotHide = true
 			</OnLoad>
 		</Scripts>
 	</Slider>
@@ -124,6 +124,20 @@
 					</Anchors>
 				</FontString>
 			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="LevelTimingsUI_FromLevelCaption" inherits="GameFontNormal" text="From:">
+					<Size x="40" y="16"/>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativeTo="LevelTimingsUI_Frame" relativePoint="BOTTOMLEFT" x="5" y="12"/>
+					</Anchors>
+				</FontString>
+				<FontString name="LevelTimingsUI_FromLevelText" inherits="GameFontNormal" text="0" justifyH="CENTER">
+					<Size x="40" y="16"/>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" relativeTo="LevelTimingsUI_Frame" relativePoint="BOTTOMRIGHT" x="-5" y="12"/>
+					</Anchors>
+				</FontString>
+			</Layer>
 		</Layers>
 		<Frames>
 			<Frame name="LevelTimingsUI_CharactersDropDown" inherits="UIDropDownMenuTemplate" hidden="false">
@@ -159,7 +173,7 @@
 			<Frame name="$parentInset" parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="4" y="-115" />
-					<Anchor point="BOTTOMRIGHT" x="-6" y="4" />
+					<Anchor point="BOTTOMRIGHT" x="-6" y="35" />
 				</Anchors>
 			</Frame>
 
@@ -212,6 +226,16 @@
 					</ScrollFrame>
 				</Frames>
 			</Frame>
+
+			<Slider name="LevelTimingsUI_FromLevelSlider" inherits="OptionsSliderTemplate" minValue="0" maxValue="120" defaultValue="0" valueStep="1" tooltipText="Hasdafasd">
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeTo="LevelTimingsUI_Frame" relativePoint="BOTTOMLEFT" x="45" y="11"/>
+					<Anchor point="RIGHT" relativeTo="LevelTimingsUI_Frame" relativePoint="RIGHT" x="-40"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad function="LevelTimingsUI_FromLevelSlider_OnLoad"/>
+				</Scripts>
+			</Slider>
 		</Frames>
 		<Scripts>
 			<OnLoad function="LevelTimingsUI_OnLoad"/>
