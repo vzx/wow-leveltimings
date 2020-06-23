@@ -12,7 +12,6 @@ eventsFrame:RegisterEvent("PLAYER_LEVEL_UP")
 eventsFrame:RegisterEvent("TIME_PLAYED_MSG")
 
 local function handleEvents(self, event, ...)
-    print("[LevelTimings] handle event", event, ...)
     if event == "ADDON_LOADED" then
         self:UnregisterEvent("ADDON_LOADED")
         LevelTimings:handleLoaded(...)
@@ -28,7 +27,6 @@ eventsFrame:SetScript("OnEvent", handleEvents)
 
 function LevelTimings:handleLoaded(...)
     local loadedAddonName = ...
-    print("[LevelTimings] handleLoaded", loadedAddonName)
     if loadedAddonName ~= addonName then
         return
     end
@@ -56,7 +54,6 @@ end
 
 function LevelTimings:handleLevelUp(...)
     local level = ...
-    print("[LevelTimings] handleLevelUp", level)
     timePlayedRequested = true
     local isFirstLevelUp = #levelUps == 0
     table.insert(levelUps, level)
@@ -64,15 +61,12 @@ function LevelTimings:handleLevelUp(...)
         -- When there are multiple level ups at once, only request time played the first time (when the array was still empty)
         -- Assumption here is that all level up events are fired and handled before the time played message is handled
         RequestTimePlayed()
-    else
-        print("[LevelTimings] Multiple level ups, this is number", #levelUps)
     end
 end
 
 
 function LevelTimings:handleTimePlayed(...)
     local totalTimePlayedSec = ...
-    print("[LevelTimings] handleTimePlayed", totalTimePlayedSec)
     if not timePlayedRequested then
         return
     end
@@ -90,20 +84,15 @@ function LevelTimings:handleTimePlayed(...)
 end
 
 function LevelTimings:handleTimePlayedLoaded(totalTimePlayedSec)
-    print("[LevelTimings] handleTimePlayedLoaded", totalTimePlayedSec)
     if LevelTimingsDB == nil then
         -- If the DB does not exist at all yet, initialize it to an empty table first
-        print("[LevelTimings] LevelTimingsDB is nil, initializing")
         LevelTimingsDB = {}
     end
 
     local guid = LevelTimings:playerGuid()
     if LevelTimingsDB[guid] ~= nil then
-        print("[LevelTimings] LevelTimingsDB for GUID", guid, "already exists")
         return
     end
-
-    print("[LevelTimings] LevelTimingsDB for GUID", guid, "is nil, initializing")
 
     -- No entry for the player, initialize entry
     local name = UnitFullName("player")
@@ -113,7 +102,6 @@ function LevelTimings:handleTimePlayedLoaded(totalTimePlayedSec)
     local class = select(2, UnitClass("player"))
     local faction = UnitFactionGroup("player")
     local timestamp = time()
-    print("[LevelTimings] name:", name, "; realm:", realm, "; currentLevel:", currentLevel, "; class:", class, "; faction:", faction, "; timestamp:", timestamp, "; totalTimePlayedSec:", totalTimePlayedSec)
     LevelTimingsDB[guid] = {
         name = name,
         realm = realm,
@@ -129,15 +117,12 @@ function LevelTimings:handleTimePlayedLoaded(totalTimePlayedSec)
 end
 
 function LevelTimings:handleTimePlayedLevelUp(totalTimePlayedSec, newLevels)
-    print("[LevelTimings] handleTimePlayedLevelUp", totalTimePlayedSec, table.concat(newLevels, ", "))
     local timestamp = time()
     local guid = LevelTimings:playerGuid()
     local zone = GetRealZoneText()
     local subZone = GetSubZoneText()
 
-    print("[LevelTimings] newLevels:", table.concat(newLevels, ", "), "; timestamp:", timestamp, "; totalTimePlayedSec:", totalTimePlayedSec, "; guid:", guid, "; Zone:", GetZoneText(), "; realZone:", zone, "; subzone:", subZone)
     for _, newLevel in ipairs(newLevels) do
-        print("recording new level", newLevel)
         -- Record the data into the database
         LevelTimingsDB[guid]["timings"][newLevel] = {
             timestamp = timestamp,
@@ -151,7 +136,6 @@ function LevelTimings:handleTimePlayedLevelUp(totalTimePlayedSec, newLevels)
         local prevEntry = LevelTimingsDB[guid]["timings"][prevLevel]
         if prevEntry ~= nil then
             local secondsNeededToReachThislevel = totalTimePlayedSec - prevEntry.played
-            print("[LevelTimings] Took " .. SecondsToTime(secondsNeededToReachThislevel) .. " to reach level " .. newLevel .. " (" .. secondsNeededToReachThislevel .. " seconds)")
         end
 
         -- Refresh the UI in case it is open at this time
