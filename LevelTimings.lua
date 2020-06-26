@@ -1,3 +1,5 @@
+-- Copyright © 2020 vzx8. All rights reserved.
+-- Licensed under GPLv3 (see license.txt).
 
 local addonName = ...
 local LevelTimings = {}
