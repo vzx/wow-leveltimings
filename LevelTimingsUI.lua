@@ -148,8 +148,7 @@ function LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry, fromLevel)
 		local level = entry.level
 		local compareEntry = nil
 		for _, ce in ipairs(compareTimings) do
-			-- TODO: this doesn't work after Shadowlands level squash yet
-			if ce.level == level then
+			if ce.level == level and LevelTimingsUI:IsSimilarGameVersion(entry.tocVersion, ce.tocVersion) then
 				compareEntry = ce
 				break
 			end
@@ -162,6 +161,16 @@ function LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry, fromLevel)
 		}
 	end
 	return levelRows
+end
+
+function LevelTimingsUI:IsSimilarGameVersion(v1, v2)
+	-- If either entry is nil, assume they are in BfA (toc version 80300)
+	v1 = v1 or 80300
+	v2 = v2 or 80300
+
+	-- Shadowlands is version 9 (toc version 9xxxx) and had a level squish
+	-- Entries are similar if they are both either pre-Shadowlands or post-Shadowlands
+	return (v1 < 90000) == (v2 < 90000)
 end
 
 function LevelTimingsUI:BuildDisplayRows(levelRows)
