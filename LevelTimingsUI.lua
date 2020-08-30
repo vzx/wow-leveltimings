@@ -217,7 +217,7 @@ function LevelTimingsUI:BuildDisplayRows(levelRows)
 					zoneText = zoneText .. " (" .. subzone .. ")"
 				end
 			else
-				zoneText = "(Unknown)"
+				zoneText = timings.initial and "(Initial entry)" or "(Unknown)"
 				zoneOrCompare.color = 0.5
 			end
 

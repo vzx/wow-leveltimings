@@ -111,15 +111,19 @@ function LevelTimings:handleTimePlayedLoaded(totalTimePlayedSec)
     local class = select(2, UnitClass("player"))
     local faction = UnitFactionGroup("player")
     local timestamp = time()
+    local gameVersion, _, _, tocVersion = GetBuildInfo()
     LevelTimingsDB["players"][guid] = {
         name = name,
         realm = realm,
         class = class,
         faction = faction,
         timings = {{
+            initial = true,
             level = currentLevel,
             timestamp = timestamp,
-            played = totalTimePlayedSec
+            played = totalTimePlayedSec,
+            gameVersion = gameVersion,
+            tocVersion = tocVersion
         }}
     }
 end
@@ -133,12 +137,15 @@ function LevelTimings:handleTimePlayedLevelUp(totalTimePlayedSec, newLevels)
     for _, newLevel in ipairs(newLevels) do
         -- Record the data into the database
         local timings = LevelTimingsDB["players"][guid]["timings"]
+        local gameVersion, _, _, tocVersion = GetBuildInfo()
         table.insert(timings, {
             level = newLevel,
             timestamp = timestamp,
             played = totalTimePlayedSec,
             zone = zone,
-            subzone = subZone
+            subzone = subZone,
+            gameVersion = gameVersion,
+            tocVersion = tocVersion
         })
 
         -- Show a nice message to the player
