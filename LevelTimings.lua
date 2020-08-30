@@ -1,6 +1,8 @@
 -- Copyright © 2020 vzx8. All rights reserved.
 -- Licensed under GPLv3 (see license.txt).
 
+local LEVEL_TIMINGS_CURRENT_DB_VERSION = 2
+
 local addonName = ...
 local LevelTimings = {}
 -- timePlayedRequested is initialized to true so that if another addon requests time played before us, we handle that
@@ -34,17 +36,22 @@ function LevelTimings:handleLoaded(...)
     end
 
     local guid = LevelTimings:playerGuid()
-    if LevelTimingsDB ~= nil and LevelTimingsDB[guid] ~= nil then
-        -- The DB has already been initialized for this character, nothing to do
-        timePlayedRequested = false
-        
-        -- Update base character data in case of some changes (eg. name or faction change)
-        LevelTimingsDB[guid].name = UnitFullName("player")
-        LevelTimingsDB[guid].realm = GetRealmName()
-        LevelTimingsDB[guid].class = select(2, UnitClass("player"))
-        LevelTimingsDB[guid].faction = UnitFactionGroup("player") 
+    if LevelTimingsDB ~= nil then
+        LevelTimings:UpgradeDB()
 
-        return
+        local playerEntry = LevelTimingsDB["players"][guid]
+        if playerEntry ~= nil then
+            -- The DB has already been initialized for this character
+            timePlayedRequested = false
+            
+            -- Update base character data in case of some changes (eg. name or faction change)
+            playerEntry.name = UnitFullName("player")
+            playerEntry.realm = GetRealmName()
+            playerEntry.class = select(2, UnitClass("player"))
+            playerEntry.faction = UnitFactionGroup("player") 
+
+            return
+        end
     end
 
     -- if another addon requested time played first, timePlayedRequested will be false here
@@ -88,11 +95,11 @@ end
 function LevelTimings:handleTimePlayedLoaded(totalTimePlayedSec)
     if LevelTimingsDB == nil then
         -- If the DB does not exist at all yet, initialize it to an empty table first
-        LevelTimingsDB = {}
+        LevelTimingsDB = {version = LEVEL_TIMINGS_CURRENT_DB_VERSION, players = {}}
     end
 
     local guid = LevelTimings:playerGuid()
-    if LevelTimingsDB[guid] ~= nil then
+    if LevelTimingsDB["players"][guid] ~= nil then
         return
     end
 
@@ -104,17 +111,16 @@ function LevelTimings:handleTimePlayedLoaded(totalTimePlayedSec)
     local class = select(2, UnitClass("player"))
     local faction = UnitFactionGroup("player")
     local timestamp = time()
-    LevelTimingsDB[guid] = {
+    LevelTimingsDB["players"][guid] = {
         name = name,
         realm = realm,
         class = class,
         faction = faction,
-        timings = {
-            [currentLevel] = {
-                timestamp = timestamp,
-                played = totalTimePlayedSec
-            }
-        }
+        timings = {{
+            level = currentLevel,
+            timestamp = timestamp,
+            played = totalTimePlayedSec
+        }}
     }
 end
 
@@ -126,16 +132,17 @@ function LevelTimings:handleTimePlayedLevelUp(totalTimePlayedSec, newLevels)
 
     for _, newLevel in ipairs(newLevels) do
         -- Record the data into the database
-        LevelTimingsDB[guid]["timings"][newLevel] = {
+        local timings = LevelTimingsDB["players"][guid]["timings"]
+        table.insert(timings, {
+            level = newLevel,
             timestamp = timestamp,
             played = totalTimePlayedSec,
             zone = zone,
             subzone = subZone
-        }
+        })
 
         -- Show a nice message to the player
-        local prevLevel = newLevel - 1
-        local prevEntry = LevelTimingsDB[guid]["timings"][prevLevel]
+        local prevEntry = timings[#timings - 1]
         if prevEntry ~= nil then
             local secondsNeededToReachThislevel = totalTimePlayedSec - prevEntry.played
         end
@@ -143,6 +150,28 @@ function LevelTimings:handleTimePlayedLevelUp(totalTimePlayedSec, newLevels)
         -- Refresh the UI in case it is open at this time
         LevelTimingsUI_RefreshList()
     end
+end
+
+-- Converts the DB of an old format which was a table of level to entry, to a flat array
+function LevelTimings:UpgradeDB()
+    if LevelTimingsDB["version"] == LEVEL_TIMINGS_CURRENT_DB_VERSION then
+        return
+    end
+
+    -- The new DB format now has a version number and player timings are in the 'players' entry rather than the top level
+    local newDb = {version = LEVEL_TIMINGS_CURRENT_DB_VERSION, players = {}}
+    local newDbPlayers = newDb["players"]
+    for guid, playerData in pairs(LevelTimingsDB) do
+        -- Timings are now a flat array, not indexed by level; the level is now inside the entry
+        local newTimings = {}
+        for level, entry in pairs(playerData["timings"]) do
+            entry["level"] = level
+            table.insert(newTimings, entry)
+        end
+        playerData["timings"] = newTimings
+        newDbPlayers[guid] = playerData
+    end
+    LevelTimingsDB = newDb
 end
 
 function LevelTimings:playerGuid()

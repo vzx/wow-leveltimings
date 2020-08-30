@@ -34,12 +34,12 @@ function LevelTimingsUI:InitiateDelete()
 		return
 	end
 
-	if not LevelTimingsDB[guid] then
+	if not LevelTimingsDB["players"][guid] then
 		-- Should never happen but eh you never know
 		return
 	end
 
-	local item = LevelTimingsDB[guid]
+	local item = LevelTimingsDB["players"][guid]
 	local name = LevelTimingsUI:ColoredName(item)
 	local realm = GetFactionColor(item.faction):WrapTextInColorCode(item.realm)
 
@@ -52,7 +52,7 @@ function LevelTimingsUI:InitiateDelete()
 end
 
 function LevelTimingsUI:DeleteFromDB(guid)
-	LevelTimingsDB[guid] = nil
+	LevelTimingsDB["players"][guid] = nil
 	LevelTimingsUI:SelectCharacter(UnitGUID("player"))
 	if guid == LevelTimingsUI.compareGuid then
 		LevelTimingsUI:SelectCompare("")
@@ -100,12 +100,12 @@ end
 
 function LevelTimingsUI:RefreshList()
 	local guid = LevelTimingsUI.selectedGuid
-	local entry = LevelTimingsDB[guid]
+	local entry = LevelTimingsDB["players"][guid]
 	local compareEntry = nil
 	local titleText = "Level Timings for " .. LevelTimingsUI:ColoredName(entry)
 
 	if LevelTimingsUI.compareGuid ~= "" then
-		compareEntry = LevelTimingsDB[LevelTimingsUI.compareGuid]
+		compareEntry = LevelTimingsDB["players"][LevelTimingsUI.compareGuid]
 		titleText = titleText .. " vs " .. LevelTimingsUI:ColoredName(compareEntry)
 		LevelTimingsUI_ListFrameColumnHeaderPlayed:SetText(LevelTimingsUI:ColoredName(entry))
 		LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare:SetText(LevelTimingsUI:ColoredName(compareEntry))
@@ -129,22 +129,36 @@ function LevelTimingsUI:BuildSortedLevelRows(entry, compareEntry, fromLevel)
 	if compareEntry then
 		compareTimings = compareEntry.timings
 	end
-	local levels = {}
+
+	local sortedTimings = {}
 	local n = 1
-	for level in pairs(timings) do
-		if level >= fromLevel then
-			levels[n] = level
+	for _, v in ipairs(timings) do
+		if v.level >= fromLevel then
+			sortedTimings[n] = v
 			n = n + 1
 		end
 	end
-	table.sort(levels)
+
+	table.sort(sortedTimings, function(l, r) 
+		return l.played < r.played
+	end)
 
 	local levelRows = {}
-	for n, level in ipairs(levels) do
-		levelRows[n] = {
+	for i, entry in ipairs(sortedTimings) do
+		local level = entry.level
+		local compareEntry = nil
+		for _, ce in ipairs(compareTimings) do
+			-- TODO: this doesn't work after Shadowlands level squash yet
+			if ce.level == level then
+				compareEntry = ce
+				break
+			end
+		end
+
+		levelRows[i] = {
 			level = level,
-			timings = timings[level],
-			compareTimings = compareTimings[level]
+			timings = entry,
+			compareTimings = compareEntry
 		}
 	end
 	return levelRows
@@ -299,7 +313,7 @@ end
 function LevelTimingsUI:PopulateDropDown(onItemClick)
 	local sortArray = {}
 	local n = 1
-	for guid, entry in pairs(LevelTimingsDB) do
+	for guid, entry in pairs(LevelTimingsDB["players"]) do
 		sortArray[n] = {guid = guid, name = entry.name, realm = entry.realm, class = entry.class, faction = entry.faction}
 		n = n + 1
 	end

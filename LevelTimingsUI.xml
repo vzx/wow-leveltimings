@@ -1,3 +1,7 @@
+<!--
+Copyright © 2020 vzx8. All rights reserved.
+Licensed under GPLv3 (see license.txt).
+-->
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
 	<Script file="LevelTimingsUI.lua"/>
 
