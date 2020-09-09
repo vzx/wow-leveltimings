@@ -108,10 +108,12 @@ function LevelTimingsUI:RefreshList()
 		compareEntry = LevelTimingsDB["players"][LevelTimingsUI.compareGuid]
 		titleText = titleText .. " vs " .. LevelTimingsUI:ColoredName(compareEntry)
 		LevelTimingsUI_ListFrameColumnHeaderPlayedTotal:SetText(LevelTimingsUI:ColoredName(entry))
-		LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare:SetText(LevelTimingsUI:ColoredName(compareEntry))
+		LevelTimingsUI_ListFrameColumnHeaderPlayedLevel:SetText(LevelTimingsUI:ColoredName(compareEntry))
+		LevelTimingsUI_ListFrameColumnHeaderZoneOrDelta:SetText("Difference")
 	else
 		LevelTimingsUI_ListFrameColumnHeaderPlayedTotal:SetText("Total played")
-		LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare:SetText(ZONE)
+		LevelTimingsUI_ListFrameColumnHeaderPlayedLevel:SetText("Played on level")
+		LevelTimingsUI_ListFrameColumnHeaderZoneOrDelta:SetText(ZONE)
 	end
 
 	LevelTimingsUI_FrameTitleText:SetText(titleText)
@@ -191,11 +193,6 @@ function LevelTimingsUI:BuildDisplayRows(levelRows)
 		end
 
 		local played = timings.played - playedOffset
-		local playedLevel = "|cFF808080?|r" -- grey
-		if levelRows[index+1] ~= nil then
-			local nextPlayed = levelRows[index+1].timings.played
-			playedLevel = LevelTimingsUI:FormatPlayed(nextPlayed - timings.played)
-		end
 
 		local entry = {}
 		displayRows[index] = entry
@@ -203,27 +200,24 @@ function LevelTimingsUI:BuildDisplayRows(levelRows)
 		entry.level = row.level
 		entry.timestamp = date("%Y-%m-%d %H:%M:%S", timings.timestamp)
 		entry.played = LevelTimingsUI:FormatPlayed(played)
-		entry.playedLevel = playedLevel
-
-		local zoneOrCompare = {justifyH = "LEFT"}
-		entry.zoneOrCompare = zoneOrCompare
 
 		if LevelTimingsUI.compareGuid ~= "" then
-			local compareText = "-"
+			local deltaText = ""
+			entry.playedLevel = "|cFF808080-|r" -- grey
 			if compareTimings then
 				local comparePlayed = compareTimings.played - compareOffset
 				local delta = comparePlayed - played
-				compareText = LevelTimingsUI:FormatPlayed(comparePlayed) .. " ("
-				if delta >= 0 then
-					compareText = compareText .. "|cFFFF0000+" -- red
-				else
-					compareText = compareText .. "|cFF00FF00-" -- green
-				end
-				compareText = compareText .. LevelTimingsUI:FormatPlayed(math.abs(delta)) .. "|r)"
+				entry.playedLevel = LevelTimingsUI:FormatPlayed(comparePlayed)
+				deltaText = (delta >= 0 and "|cFFFF0000+" or "|cFF00FF00-") .. LevelTimingsUI:FormatPlayed(math.abs(delta)) .. "|r"
 			end
-			zoneOrCompare.text = compareText
-			zoneOrCompare.justifyH = "RIGHT"
+			entry.zoneOrDelta = deltaText
 		else
+			entry.playedLevel = "|cFF808080?|r" -- grey
+			if levelRows[index+1] ~= nil then
+				local nextPlayed = levelRows[index+1].timings.played
+				entry.playedLevel = LevelTimingsUI:FormatPlayed(nextPlayed - timings.played)
+			end
+	
 			local zone, subzone = timings.zone, timings.subzone
 			local zoneText = ""
 			if zone then
@@ -236,7 +230,7 @@ function LevelTimingsUI:BuildDisplayRows(levelRows)
 				zoneText = "|cFF808080" .. (timings.initial and "(Initial entry)" or "(Unknown)") .. "|r"
 			end
 
-			zoneOrCompare.text = zoneText
+			entry.zoneOrDelta = zoneText
 		end
 	end
 
@@ -294,8 +288,7 @@ function LevelTimingsUI:UpdateList()
 			button.Timestamp:SetText(row.timestamp)
 			button.PlayedTotal:SetText(row.played)
 			button.PlayedLevel:SetText(row.playedLevel)
-			button.ZoneOrCompare:SetText(row.zoneOrCompare.text)
-			button.ZoneOrCompare:SetJustifyH(row.zoneOrCompare.justifyH)
+			button.ZoneOrDelta:SetText(row.zoneOrDelta)
 			button.index = index
 			button:Show()
 			usedHeight = usedHeight + buttonHeight
