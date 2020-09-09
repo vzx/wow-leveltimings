@@ -373,7 +373,7 @@ function LevelTimingsUI_OnLoad(self)
 	LevelTimingsUI_ScrollFrame.update = LevelTimingsUI.UpdateList
 	HybridScrollFrame_CreateButtons(LevelTimingsUI_ScrollFrame, "LevelTimingsUI_ButtonTemplate")
 
-	if true then
+	if false then
 		-- TODO: Debug stuff
 		self:RegisterEvent("ADDON_LOADED")
 		self:SetScript("OnEvent", function(self, msg, addonName)
