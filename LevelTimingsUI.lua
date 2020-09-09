@@ -191,6 +191,11 @@ function LevelTimingsUI:BuildDisplayRows(levelRows)
 		end
 
 		local played = timings.played - playedOffset
+		local playedLevel = "|cFF808080?|r" -- grey
+		if levelRows[index+1] ~= nil then
+			local nextPlayed = levelRows[index+1].timings.played
+			playedLevel = LevelTimingsUI:FormatPlayed(nextPlayed - timings.played)
+		end
 
 		local entry = {}
 		displayRows[index] = entry
@@ -198,8 +203,9 @@ function LevelTimingsUI:BuildDisplayRows(levelRows)
 		entry.level = row.level
 		entry.timestamp = date("%Y-%m-%d %H:%M:%S", timings.timestamp)
 		entry.played = LevelTimingsUI:FormatPlayed(played)
+		entry.playedLevel = playedLevel
 
-		local zoneOrCompare = {justifyH = "LEFT", color = 1}
+		local zoneOrCompare = {justifyH = "LEFT"}
 		entry.zoneOrCompare = zoneOrCompare
 
 		if LevelTimingsUI.compareGuid ~= "" then
@@ -209,9 +215,9 @@ function LevelTimingsUI:BuildDisplayRows(levelRows)
 				local delta = comparePlayed - played
 				compareText = LevelTimingsUI:FormatPlayed(comparePlayed) .. " ("
 				if delta >= 0 then
-					compareText = compareText .. "|cFFFF0000+"
+					compareText = compareText .. "|cFFFF0000+" -- red
 				else
-					compareText = compareText .. "|cFF00FF00-"
+					compareText = compareText .. "|cFF00FF00-" -- green
 				end
 				compareText = compareText .. LevelTimingsUI:FormatPlayed(math.abs(delta)) .. "|r)"
 			end
@@ -226,8 +232,8 @@ function LevelTimingsUI:BuildDisplayRows(levelRows)
 					zoneText = zoneText .. " (" .. subzone .. ")"
 				end
 			else
-				zoneText = timings.initial and "(Initial entry)" or "(Unknown)"
-				zoneOrCompare.color = 0.5
+				-- grey
+				zoneText = "|cFF808080" .. (timings.initial and "(Initial entry)" or "(Unknown)") .. "|r"
 			end
 
 			zoneOrCompare.text = zoneText
@@ -287,10 +293,9 @@ function LevelTimingsUI:UpdateList()
 			button.Level:SetText(row.level)
 			button.Timestamp:SetText(row.timestamp)
 			button.PlayedTotal:SetText(row.played)
+			button.PlayedLevel:SetText(row.playedLevel)
 			button.ZoneOrCompare:SetText(row.zoneOrCompare.text)
 			button.ZoneOrCompare:SetJustifyH(row.zoneOrCompare.justifyH)
-			local color = row.zoneOrCompare.color
-			button.ZoneOrCompare:SetTextColor(color, color, color)
 			button.index = index
 			button:Show()
 			usedHeight = usedHeight + buttonHeight
