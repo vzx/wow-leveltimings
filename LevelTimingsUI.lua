@@ -107,10 +107,10 @@ function LevelTimingsUI:RefreshList()
 	if LevelTimingsUI.compareGuid ~= "" then
 		compareEntry = LevelTimingsDB["players"][LevelTimingsUI.compareGuid]
 		titleText = titleText .. " vs " .. LevelTimingsUI:ColoredName(compareEntry)
-		LevelTimingsUI_ListFrameColumnHeaderPlayed:SetText(LevelTimingsUI:ColoredName(entry))
+		LevelTimingsUI_ListFrameColumnHeaderPlayedTotal:SetText(LevelTimingsUI:ColoredName(entry))
 		LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare:SetText(LevelTimingsUI:ColoredName(compareEntry))
 	else
-		LevelTimingsUI_ListFrameColumnHeaderPlayed:SetText(PLAYED)
+		LevelTimingsUI_ListFrameColumnHeaderPlayedTotal:SetText("Total played")
 		LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare:SetText(ZONE)
 	end
 
@@ -286,7 +286,7 @@ function LevelTimingsUI:UpdateList()
 
 			button.Level:SetText(row.level)
 			button.Timestamp:SetText(row.timestamp)
-			button.Played:SetText(row.played)
+			button.PlayedTotal:SetText(row.played)
 			button.ZoneOrCompare:SetText(row.zoneOrCompare.text)
 			button.ZoneOrCompare:SetJustifyH(row.zoneOrCompare.justifyH)
 			local color = row.zoneOrCompare.color

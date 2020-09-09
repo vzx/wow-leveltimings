@@ -21,22 +21,22 @@ Licensed under GPLv3 (see license.txt).
 						<Anchor point="LEFT" relativeKey="$parent.Level" relativePoint="RIGHT" x="8" y="0"/>
 					</Anchors>
 				</FontString>
-				<FontString parentKey="Played" inherits="GameFontHighlightSmall" justifyH="RIGHT">
+				<FontString parentKey="PlayedTotal" inherits="GameFontHighlightSmall" justifyH="RIGHT">
 					<Size x="108" y="14"/>
 					<Anchors>
 						<Anchor point="LEFT" relativeKey="$parent.Timestamp" relativePoint="RIGHT" x="8" y="0"/>
 					</Anchors>
 				</FontString>
-				<FontString parentKey="Played2" inherits="GameFontHighlightSmall" justifyH="RIGHT">
+				<FontString parentKey="PlayedLevel" inherits="GameFontHighlightSmall" justifyH="RIGHT">
 					<Size x="108" y="14"/>
 					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Played" relativePoint="RIGHT" x="8" y="0"/>
+						<Anchor point="LEFT" relativeKey="$parent.PlayedTotal" relativePoint="RIGHT" x="8" y="0"/>
 					</Anchors>
 				</FontString>
 				<FontString parentKey="ZoneOrCompare" inherits="GameFontHighlightSmall" justifyH="LEFT">
 					<Size x="185" y="14"/>
 					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Played2" relativePoint="RIGHT" x="8" y="0"/>
+						<Anchor point="LEFT" relativeKey="$parent.PlayedLevel" relativePoint="RIGHT" x="8" y="0"/>
 					</Anchors>
 				</FontString>
 			</Layer>
@@ -207,7 +207,7 @@ Licensed under GPLv3 (see license.txt).
 							<OnLoad>self.Middle:SetWidth(125-9)</OnLoad>
 						</Scripts>
 					</Button>
-					<Button name="LevelTimingsUI_ListFrameColumnHeaderPlayed" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="PLAYED">
+					<Button name="LevelTimingsUI_ListFrameColumnHeaderPlayedTotal" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="Total played">
 						<Size x="120" y="24"/>
 						<Anchors>
 							<Anchor point="LEFT" relativeTo="LevelTimingsUI_ListFrameColumnHeaderDateTime" relativePoint="RIGHT" x="-2" y="0"/>
@@ -216,10 +216,10 @@ Licensed under GPLv3 (see license.txt).
 							<OnLoad>self.Middle:SetWidth(120-9)</OnLoad>
 						</Scripts>
 					</Button>
-					<Button name="LevelTimingsUI_ListFrameColumnHeaderPlayed2" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="PLAYED2">
+					<Button name="LevelTimingsUI_ListFrameColumnHeaderPlayedLevel" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="Played on level">
 						<Size x="120" y="24"/>
 						<Anchors>
-							<Anchor point="LEFT" relativeTo="LevelTimingsUI_ListFrameColumnHeaderPlayed" relativePoint="RIGHT" x="-2" y="0"/>
+							<Anchor point="LEFT" relativeTo="LevelTimingsUI_ListFrameColumnHeaderPlayedTotal" relativePoint="RIGHT" x="-2" y="0"/>
 						</Anchors>
 						<Scripts>
 							<OnLoad>self.Middle:SetWidth(120-9)</OnLoad>
@@ -228,7 +228,7 @@ Licensed under GPLv3 (see license.txt).
 					<Button name="LevelTimingsUI_ListFrameColumnHeaderZoneOrCompare" inherits="LevelTimingsUI_ColumnHeaderTemplate" text="ZONE">
 						<Size x="195" y="24"/>
 						<Anchors>
-							<Anchor point="LEFT" relativeTo="LevelTimingsUI_ListFrameColumnHeaderPlayed2" relativePoint="RIGHT" x="-2" y="0"/>
+							<Anchor point="LEFT" relativeTo="LevelTimingsUI_ListFrameColumnHeaderPlayedLevel" relativePoint="RIGHT" x="-2" y="0"/>
 						</Anchors>
 						<Scripts>
 							<OnLoad>self.Middle:SetWidth(195-9)</OnLoad>
