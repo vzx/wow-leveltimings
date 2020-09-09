@@ -180,6 +180,16 @@ Licensed under GPLv3 (see license.txt).
 				</Scripts>
 			</Frame>
 
+			<Button name="LevelTimingsUI_SwapCharacterButton" inherits="UIPanelButtonTemplate" hidden="false" text="Swap">
+				<Size x="80" y="22"/>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="LevelTimingsUI_CompareDropDown" relativePoint="RIGHT" x="-10" y="3"/>
+				</Anchors>
+				<Scripts>
+					<OnClick function="LevelTimingsUI_SwapCharacterButton_Click"/>
+				</Scripts>
+			</Button>
+
 			<Frame name="$parentInset" parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="4" y="-115" />

@@ -53,10 +53,11 @@ end
 
 function LevelTimingsUI:DeleteFromDB(guid)
 	LevelTimingsDB["players"][guid] = nil
-	LevelTimingsUI:SelectCharacter(UnitGUID("player"))
+	LevelTimingsUI:SelectCharacter(UnitGUID("player"), true)
 	if guid == LevelTimingsUI.compareGuid then
-		LevelTimingsUI:SelectCompare("")
+		LevelTimingsUI:SelectCompare("", true)
 	end
+	LevelTimingsUI:RefreshList()
 end
 
 function LevelTimingsUI_ToggleShown()
@@ -67,14 +68,28 @@ function LevelTimingsUI:Show()
 	LevelTimingsUI_Frame:Show()
 end
 
-function LevelTimingsUI:SelectCharacter(guid)
+function LevelTimingsUI:SelectCharacter(guid, skipRefresh)
 	LevelTimingsUI.selectedGuid = guid
 	LevelTimingsUI:SetSelectedCharacterInDropDown()
-	LevelTimingsUI:RefreshList()
+	if not skipRefresh then
+		LevelTimingsUI:RefreshList()
+	end
 end
 
-function LevelTimingsUI:SelectCompare(guid)
+function LevelTimingsUI:SelectCompare(guid, skipRefresh)
 	LevelTimingsUI.compareGuid = guid
+	LevelTimingsUI:SetSelectedCompareInDropDown()
+	if not skipRefresh then
+		LevelTimingsUI:RefreshList()
+	end
+end
+
+function LevelTimingsUI:SwapCharacters()
+	local previousCompareGuid = LevelTimingsUI.compareGuid
+	LevelTimingsUI.compareGuid = LevelTimingsUI.selectedGuid
+	LevelTimingsUI.selectedGuid = previousCompareGuid
+
+	LevelTimingsUI:SetSelectedCharacterInDropDown()
 	LevelTimingsUI:SetSelectedCompareInDropDown()
 	LevelTimingsUI:RefreshList()
 end
@@ -86,6 +101,7 @@ end
 
 function LevelTimingsUI:SetSelectedCompareInDropDown()
 	UIDropDownMenu_SetSelectedValue(LevelTimingsUI_CompareDropDown, LevelTimingsUI.compareGuid)
+	LevelTimingsUI_SwapCharacterButton:SetEnabled(LevelTimingsUI.compareGuid ~= "")
 end
 
 function LevelTimingsUI_SetFromLevel(self, level)
@@ -394,6 +410,10 @@ end
 
 function LevelTimingsUI_DeleteCharacterButton_Click(self)
 	LevelTimingsUI:InitiateDelete()
+end
+
+function LevelTimingsUI_SwapCharacterButton_Click(self)
+	LevelTimingsUI:SwapCharacters()
 end
 
 function LevelTimingsUI_FromLevelSlider_OnLoad(self)
