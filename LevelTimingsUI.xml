@@ -256,7 +256,7 @@ Licensed under GPLv3 (see license.txt).
 				</Frames>
 			</Frame>
 
-			<Slider name="LevelTimingsUI_FromLevelSlider" inherits="OptionsSliderTemplate" minValue="0" maxValue="120" defaultValue="0" valueStep="1" tooltipText="Hasdafasd">
+			<Slider name="LevelTimingsUI_FromLevelSlider" inherits="OptionsSliderTemplate" orientation="HORIZONTAL" minValue="0" maxValue="120" defaultValue="0" valueStep="1">
 				<Anchors>
 					<Anchor point="BOTTOMLEFT" relativeTo="LevelTimingsUI_Frame" relativePoint="BOTTOMLEFT" x="45" y="11"/>
 					<Anchor point="RIGHT" relativeTo="LevelTimingsUI_Frame" relativePoint="RIGHT" x="-40"/>

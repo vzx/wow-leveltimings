@@ -417,6 +417,7 @@ function LevelTimingsUI_SwapCharacterButton_Click(self)
 end
 
 function LevelTimingsUI_FromLevelSlider_OnLoad(self)
+	self:OnBackdropLoaded()
 	self:SetObeyStepOnDrag(true)
 	local name = self:GetName()
 	_G[name .. "Low"]:Hide()
